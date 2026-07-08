@@ -1,0 +1,32 @@
+# AbiPy TaskManager configuration for the CEMDI 2026 tutorial cluster
+# (cemdi.calculquebec.cloud).
+#
+# Each student gets their own interactive session (SSH or JupyterLab) with
+# 8 CPU cores, so tasks are launched directly in that session rather than
+# submitted to a batch scheduler -- hence `qtype: shell`. If it turns out
+# the cluster actually requires submitting through Slurm, change `qtype`
+# to `slurm` and add `qparams` (account, partition, ...) the way
+# AbipyExamples/Data/Config_files/config_rorqual/manager.yml does for the
+# Rorqual cluster.
+#
+# Install with:
+#   mkdir -p ~/.abinit/abipy
+#   cp manager.yml scheduler.yml ~/.abinit/abipy/
+# (this is exactly what Tutorial/setup_environment.sh does for you).
+
+qadapters:
+-  priority: 1
+   queue:
+        qtype: shell        # Run jobs directly in the current session.
+        qname: localhost
+   job:
+       mpi_runner: "mpirun"
+   limits:
+       timelimit: 1:00:00   # Time-limit for each task.
+       max_cores: 8         # Matches the 8 CPU cores allotted per student.
+       max_num_launches: 8  # Max number of times a task can be relaunched.
+   hardware:
+       num_nodes: 1
+       sockets_per_node: 1
+       cores_per_socket: 8
+       mem_per_node: 8000 Mb

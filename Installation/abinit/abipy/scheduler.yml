@@ -1,0 +1,12 @@
+# AbiPy scheduler configuration for the CEMDI 2026 tutorial cluster.
+# Controls how often AbiPy polls the flow while running
+# `flow.make_scheduler().start()` or `abirun.py FLOWDIR scheduler`.
+
+seconds: 5   # Poll every 5 seconds.
+
+# Limit on the number of jobs that can be present in the queue (DEFAULT: 200).
+max_njobs_inqueue: 4
+
+# Maximum number of cores the scheduler is allowed to use at once.
+# Matches the 8 CPU cores allotted per student.
+max_ncores_used: 8
