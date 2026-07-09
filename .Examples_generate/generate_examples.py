@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Generate the standalone `run_*.py` example scripts in this directory from
+Generate the standalone `make_*.py` example scripts in this directory from
 `../Notebooks/workshop_lib.py`.
 
-Why generate rather than hand-write: each `run_*.py` is meant to be copied
+Why generate rather than hand-write: each `make_*.py` is meant to be copied
 by a student into their own work directory and run on its own, so it must
 NOT `import workshop_lib`. But the notebook's analysis cells assume the
 flows were built with *exactly* the same `AbinitInput`/`Flow` code as
@@ -65,7 +65,7 @@ class Recipe:
 
 RECIPES = [
     Recipe(
-        fname="run_gaas_gstate.py",
+        fname="make_gaas_gstate.py",
         docstring="""\
 Companion to Section 3 ("Ground-state total energy of GaAs") of the
 workshop notebook.
@@ -76,7 +76,7 @@ instead of blocking the notebook kernel with `flow.make_scheduler().start()`.
 
 Usage
 -----
-    python run_gaas_gstate.py
+    python make_gaas_gstate.py
     abirun.py flow_gaas_gstate scheduler   # ... then run it (repeat if interrupted)
     abirun.py flow_gaas_gstate status      # ... or just check progress
 """,
@@ -85,7 +85,7 @@ Usage
         needs_gaas_cif=True,
     ),
     Recipe(
-        fname="run_gaas_convecut.py",
+        fname="make_gaas_convecut.py",
         docstring="""\
 Companion to Section 4.1 ("ecut convergence") of the workshop notebook.
 
@@ -95,7 +95,7 @@ per value of `ecut`. After it completes, the notebook's `GsrRobot` /
 
 Usage
 -----
-    python run_gaas_convecut.py
+    python make_gaas_convecut.py
     abirun.py flow_gaas_convecut scheduler
     abirun.py flow_gaas_convecut status
 """,
@@ -104,7 +104,7 @@ Usage
         needs_gaas_cif=True,
     ),
     Recipe(
-        fname="run_gaas_convkpt.py",
+        fname="make_gaas_convkpt.py",
         docstring="""\
 Companion to Section 4.2 ("k-point convergence") of the workshop notebook.
 
@@ -115,7 +115,7 @@ against k-point density.
 
 Usage
 -----
-    python run_gaas_convkpt.py
+    python make_gaas_convkpt.py
     abirun.py flow_gaas_convkpt scheduler
     abirun.py flow_gaas_convkpt status
 """,
@@ -124,19 +124,19 @@ Usage
         needs_gaas_cif=True,
     ),
     Recipe(
-        fname="run_gaas_ebands.py",
+        fname="make_gaas_ebands.py",
         docstring="""\
 Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
 notebook, GaAs half.
 
 Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
-run along the L-Gamma-X path. See also `run_si_ebands.py` for the silicon
+run along the L-Gamma-X path. See also `make_si_ebands.py` for the silicon
 comparison.
 
 Usage
 -----
-    python run_gaas_ebands.py
+    python make_gaas_ebands.py
     abirun.py flow_gaas_ebands scheduler
     abirun.py flow_gaas_ebands status
 """,
@@ -146,7 +146,7 @@ Usage
         needs_fcc_kpath=True,
     ),
     Recipe(
-        fname="run_si_ebands.py",
+        fname="make_si_ebands.py",
         docstring="""\
 Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
 notebook, Si half.
@@ -154,12 +154,12 @@ notebook, Si half.
 Builds the same flow as `workshop_lib.build_si_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
 run along the L-Gamma-X path, this time for silicon. See also
-`run_gaas_ebands.py` for the GaAs run this is compared against -- GaAs has a
+`make_gaas_ebands.py` for the GaAs run this is compared against -- GaAs has a
 direct gap at Gamma, while silicon's fundamental gap is indirect.
 
 Usage
 -----
-    python run_si_ebands.py
+    python make_si_ebands.py
     abirun.py flow_si_ebands scheduler
     abirun.py flow_si_ebands status
 """,
@@ -169,7 +169,7 @@ Usage
         needs_fcc_kpath=True,
     ),
     Recipe(
-        fname="run_gaas_eos.py",
+        fname="make_gaas_eos.py",
         docstring="""\
 Companion to Section 6 ("Equation of state and the lattice parameter") of
 the workshop notebook.
@@ -184,7 +184,7 @@ converged.
 
 Usage
 -----
-    python run_gaas_eos.py
+    python make_gaas_eos.py
     abirun.py flow_gaas_eos scheduler
     abirun.py flow_gaas_eos status
 """,
@@ -194,7 +194,7 @@ Usage
         needs_gaas_cif=True,
     ),
     Recipe(
-        fname="run_gaas_phonons.py",
+        fname="make_gaas_phonons.py",
         docstring="""\
 Companion to Section 7 ("Phonons from DFPT") of the workshop notebook.
 
@@ -207,11 +207,11 @@ with `nohup` (see below) rather than waiting on it in a foreground shell.
 
 Usage
 -----
-    python run_gaas_phonons.py
+    python make_gaas_phonons.py
     abirun.py flow_gaas_phonons scheduler   # repeat if interrupted
     abirun.py flow_gaas_phonons status       # check progress / list tasks
 
-    nohup python run_gaas_phonons.py > log 2> err &   # ... run in the background
+    nohup python make_gaas_phonons.py > log 2> err &   # ... run in the background
 """,
         chunks=["build_phonon_flow", "setup_manager"],
         entry_fn="build_phonon_flow",
@@ -257,7 +257,7 @@ def render(recipe):
     footer = f'''def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name)
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
     flow = {recipe.entry_fn}(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

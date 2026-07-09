@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 """
-Companion to Section 3 ("Ground-state total energy of GaAs") of the
-workshop notebook.
+Companion to Section 4.1 ("ecut convergence") of the workshop notebook.
 
-Builds the same flow as `workshop_lib.build_gs_flow()` and writes it to
-disk, so it can be launched and monitored from a terminal on the cluster
-instead of blocking the notebook kernel with `flow.make_scheduler().start()`.
+Builds the same flow as `workshop_lib.build_ecut_conv_flow()`: one SCF task
+per value of `ecut`. After it completes, the notebook's `GsrRobot` /
+`ConvergenceAnalyzer` cells collect the results into a convergence plot.
 
 Usage
 -----
-    python run_gaas_gstate.py
-    abirun.py flow_gaas_gstate scheduler   # ... then run it (repeat if interrupted)
-    abirun.py flow_gaas_gstate status      # ... or just check progress
+    python make_gaas_convecut.py
+    abirun.py flow_gaas_convecut scheduler
+    abirun.py flow_gaas_convecut status
 """
 from pathlib import Path
 
@@ -41,10 +40,11 @@ def gs_input(ecut=6, ngkpt=(8, 8, 8)):
     return inp
 
 
-def build_gs_flow(workdir):
-    """Flow with a single SCF task: the total energy of GaAs."""
+def build_ecut_conv_flow(workdir, ecut_list=range(10, 40, 5)):
+    """Flow with one SCF task per value of ecut."""
     flow = flowtk.Flow(workdir=workdir)
-    flow.register_scf_task(gs_input())
+    for ecut in ecut_list:
+        flow.register_scf_task(gs_input(ecut=ecut))
     return flow
 
 
@@ -59,9 +59,9 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name)
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
-    flow = build_gs_flow(workdir=workdir)
+    flow = build_ecut_conv_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
     return flow
 

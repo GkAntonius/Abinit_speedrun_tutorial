@@ -11,11 +11,11 @@ with `nohup` (see below) rather than waiting on it in a foreground shell.
 
 Usage
 -----
-    python run_gaas_phonons.py
+    python make_gaas_phonons.py
     abirun.py flow_gaas_phonons scheduler   # repeat if interrupted
     abirun.py flow_gaas_phonons status       # check progress / list tasks
 
-    nohup python run_gaas_phonons.py > log 2> err &   # ... run in the background
+    nohup python make_gaas_phonons.py > log 2> err &   # ... run in the background
 """
 from pathlib import Path
 
@@ -59,7 +59,7 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name)
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
     flow = build_phonon_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

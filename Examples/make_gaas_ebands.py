@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 """
 Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
-notebook, Si half.
+notebook, GaAs half.
 
-Builds the same flow as `workshop_lib.build_si_ebands_flow()`: a
+Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
-run along the L-Gamma-X path, this time for silicon. See also
-`run_gaas_ebands.py` for the GaAs run this is compared against -- GaAs has a
-direct gap at Gamma, while silicon's fundamental gap is indirect.
+run along the L-Gamma-X path. See also `make_si_ebands.py` for the silicon
+comparison.
 
 Usage
 -----
-    python run_si_ebands.py
-    abirun.py flow_si_ebands scheduler
-    abirun.py flow_si_ebands status
+    python make_gaas_ebands.py
+    abirun.py flow_gaas_ebands scheduler
+    abirun.py flow_gaas_ebands status
 """
 from pathlib import Path
 
@@ -28,7 +27,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
-SI_CIF = STRUCTURE_DIR / 'mp-149_Si.cif'
+GAAS_CIF = STRUCTURE_DIR / 'mp-2534_GaAs.cif'
 FCC_KPATH = [[0.5, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.5, 0.5]]
 
 
@@ -49,9 +48,9 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
     return multi.split_datasets()
 
 
-def build_si_ebands_flow(workdir):
+def build_gaas_ebands_flow(workdir):
     scf_input, nscf_input = _bandstructure_inputs(
-        Structure.from_file(str(SI_CIF)), ["Si.psp8"], ecut=25, ngkpt=(4, 4, 4),
+        Structure.from_file(str(GAAS_CIF)), ["Ga.psp8", "As.psp8"], ecut=40, ngkpt=(4, 4, 4),
         kptbounds=FCC_KPATH)
     return flowtk.bandstructure_flow(workdir, scf_input, nscf_input)
 
@@ -67,9 +66,9 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name)
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
-    flow = build_si_ebands_flow(workdir=workdir)
+    flow = build_gaas_ebands_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
     return flow
 

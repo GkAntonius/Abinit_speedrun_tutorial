@@ -13,7 +13,7 @@ converged.
 
 Usage
 -----
-    python run_gaas_eos.py
+    python make_gaas_eos.py
     abirun.py flow_gaas_eos scheduler
     abirun.py flow_gaas_eos status
 """
@@ -63,7 +63,7 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name)
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
     flow = build_eos_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
