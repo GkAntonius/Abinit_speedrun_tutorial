@@ -72,4 +72,4 @@ fi
 echo
 echo "=== Setup complete ==="
 echo "Check everything is in order with: abicheck.py"
-echo "Then open Tutorial/Notebooks/abinit_cemdi_workshop.ipynb"
+echo "Then open Tutorial/Notebooks/1_running_calculations.ipynb"
