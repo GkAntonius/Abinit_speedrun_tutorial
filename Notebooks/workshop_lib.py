@@ -3,12 +3,18 @@ Helper functions for the CEMDI 2026 Abinit/AbiPy workshop notebook.
 
 Everything here revolves around a single test system, gallium arsenide (GaAs),
 so that the whole 3h session reuses the same structure and pseudopotentials.
-Silicon (Si) is used once, for comparison, in the band-structure section.
+Silicon (Si) is used in the manual Task/Flow examples of `1-Task_to_flow.ipynb`,
+and again, for comparison, in the band-structure section of `2-Existing_flows.ipynb`.
 
 The ground-state / convergence / band-structure builders below are direct
 adaptations of the scripts originally prepared in AbipyExamples
 (Production/004-GaAs-gs, 005-GaAs-conv-ecut, 006-GaAs-conv-kpt,
 007-GaAs-ebands, 008-Si-ebands).
+
+The Si Task/Flow builders (`si_gs_input`, `build_si_gs_task`,
+`si_bandstructure_input`, `build_si_nscf_task`, `build_si_ebands_task_flow`,
+`setup_task_manager`) back the `run_si_*.py` scripts generated for
+`1-Task_to_flow.ipynb` -- see `../.Examples_generate/generate_examples.py`.
 
 The equation-of-state and DFPT phonon builders are new for this workshop.
 The phonon flow is a simplified version -- applied to GaAs instead of GaP,
@@ -60,6 +66,83 @@ def gaas_structure():
 def si_structure():
     """Return the AbiPy Structure for Si (Materials Project mp-149)."""
     return Structure.from_file(str(SI_CIF))
+
+
+# ---------------------------------------------------------------------------
+# 0) Si ground-state / band-structure Tasks, built by hand instead of via a
+#    Flow -- used by 1-Task_to_flow.ipynb's run_si_gstate.py / run_si_nscf.py
+#    / run_si_ebands.py to show the Task -> Flow progression before the rest
+#    of this module moves on to GaAs Flows.
+# ---------------------------------------------------------------------------
+def si_gs_input(ecut=6, ngkpt=(8, 8, 8)):
+    """Return a GS input for Si on a homogeneous k-mesh."""
+    structure = si_structure()
+    pseudos = ["Si.psp8"]
+
+    inp = abilab.AbinitInput(structure=structure, pseudos=pseudos, pseudo_dir=str(PSEUDO_DIR))
+    inp.set_vars(ecut=ecut, nband=16, paral_kgb=0, iomode=3)
+    inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
+    inp.set_vars(tolvrs=1e-6)
+    return inp
+
+
+def build_si_gs_task(workdir):
+    """A single AbinitTask (no Flow, no Work) for the Si ground state."""
+    inp = si_gs_input()
+    return flowtk.AbinitTask(inp, workdir=workdir)
+
+
+def si_bandstructure_input(ecut=6):
+    """Return a Si band-structure (NSCF) input along the L-Gamma-X path."""
+    structure = si_structure()
+    pseudos = ["Si.psp8"]
+
+    inp = abilab.AbinitInput(structure=structure, pseudos=pseudos, pseudo_dir=str(PSEUDO_DIR))
+
+    # A band structure calculation is a non-self-consistent task (iscf=-1).
+    inp.set_vars(ecut=ecut, iscf=-1, iomode=3)
+
+    # We require more bands, and the tolerance criterion is on the wavefunction.
+    inp.set_vars(nband=40, tolwfr=1e-12)
+
+    # We compute the eigenvalues along a k-point path between high symmetry points.
+    inp.set_kpath(ndivsm=10, kptbounds=FCC_KPATH)
+
+    return inp
+
+
+def build_si_nscf_task(workdir, density):
+    """A second AbinitTask, depending on `density` (a Task, or a path/'DEN' pair)."""
+    inp = si_bandstructure_input()
+
+    # Dependencies are specified as a dict of the form {file_or_task: property}.
+    deps = {density: 'DEN'}
+
+    return flowtk.AbinitTask(inp, workdir=workdir, deps=deps)
+
+
+def build_si_ebands_task_flow(workdir):
+    """Same two Tasks as above, registered in a Work/Flow instead of run by hand."""
+    flow = flowtk.Flow(workdir=workdir)
+    work = flowtk.Work(workdir=None)
+
+    gs_task = build_si_gs_task(workdir=None)
+    nscf_task = build_si_nscf_task(workdir=None, density=gs_task)
+
+    work.register_task(gs_task)
+    work.register_task(nscf_task)
+    flow.register_work(work)
+
+    return flow
+
+
+def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+    """Same as setup_manager(), for a standalone Task instead of a Flow."""
+    manager = abilab.TaskManager.from_user_config()
+    manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
+    manager.qadapter.set_timelimit(3600 * timelimit_hour)
+    task.set_manager(manager)
+    return task
 
 
 # ---------------------------------------------------------------------------

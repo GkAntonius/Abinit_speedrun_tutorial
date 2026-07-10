@@ -104,7 +104,7 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 def main():
 
     # Construct workdir from the file name
-    workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+    workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
     # Initialize the flow object
     flow = build_si_ebands_task_flow(workdir)
@@ -120,15 +120,15 @@ def main():
     flow.build_and_pickle_dump()
 
     # Run each of the tasks sequentially and wait for the result.
-    print('Running flow...')
-    for work in flow:
-        for task in work:
-            task.start_and_wait()
+    #print('Running flow...')
+    #for work in flow:
+    #    for task in work:
+    #        task.start_and_wait()
 
-            # Report calculation status
-            name = task.name
-            status = task.check_status()
-            print(f'Status of task {name}: {status}')
+    #        # Report calculation status
+    #        name = task.name
+    #        status = task.check_status()
+    #        print(f'Status of task {name}: {status}')
 
 
 if __name__ == "__main__":

@@ -3,13 +3,15 @@
 Generate the standalone `run_*.py` / `make_*.py` example scripts in this
 directory from `../Notebooks/workshop_lib.py`.
 
-Naming convention: `run_gaas_gstate.py` (used in `1-Task_to_flow.ipynb`) is
-a `run_*` script -- simple enough to build and launch live, in one sitting.
-Everything under `2-Existing_flows.ipynb` (convergence, band structures,
-phonons) is a `make_*` script instead: these flows take longer, so they
-were already run ahead of time for the tutorial, and the notebooks mostly
-analyze their (pre-existing) results -- `make_*` here means "this is how
-that flow was constructed", not "run this now".
+Naming convention: the three `run_si_*.py` scripts (used in
+`1-Task_to_flow.ipynb`) build and launch a Task/Flow live, in one sitting,
+and print their own status when done. Everything under
+`2-Existing_flows.ipynb` (convergence, band structures, phonons) is a
+`make_*` script instead: these flows take longer, so they were already run
+ahead of time for the tutorial, and the notebooks mostly analyze their
+(pre-existing) results -- `make_*` here means "this is how that flow was
+constructed", not "run this now". Both flavors are generated the same way,
+via a `Recipe.kind` (see below) that only changes the `main()` footer.
 
 Why generate rather than hand-write: each script is meant to be copied by a
 student into their own work directory and run on its own, so it must NOT
@@ -58,9 +60,26 @@ def src(name):
 
 
 class Recipe:
-    def __init__(self, fname, docstring, chunks, entry_fn,
+    """
+    `kind` picks the `main()` footer (see `render()`):
+
+    * "make_flow" (default) -- builds a Flow and just pickles it, for
+      `abirun.py ... scheduler` to pick up later. Used under
+      `2-Existing_flows.ipynb`.
+    * "run_task" -- builds a single Task and runs it synchronously
+      (`task.start_and_wait()`). Used by steps 1-2 of `1-Task_to_flow.ipynb`.
+    * "run_flow" -- builds a Flow but, instead of a scheduler, runs each of
+      its Tasks synchronously in a plain loop. Used by step 3 of
+      `1-Task_to_flow.ipynb`.
+
+    `build_expr` is the expression (given `workdir`) that builds the
+    Task/Flow for "run_task"/"run_flow"; "make_flow" instead calls
+    `entry_fn(workdir=workdir)`.
+    """
+    def __init__(self, fname, docstring, chunks, entry_fn=None,
                  extra_imports="", needs_gaas_cif=False, needs_si_cif=False,
-                 needs_fcc_kpath=False):
+                 needs_fcc_kpath=False, kind="make_flow", build_expr=None,
+                 timelimit_hour=2.0):
         self.fname = fname
         self.docstring = docstring
         self.chunks = chunks
@@ -69,13 +88,81 @@ class Recipe:
         self.needs_gaas_cif = needs_gaas_cif
         self.needs_si_cif = needs_si_cif
         self.needs_fcc_kpath = needs_fcc_kpath
+        self.kind = kind
+        self.build_expr = build_expr
+        self.timelimit_hour = timelimit_hour
 
 
 RECIPES = [
-    # `1-Task_to_flow.ipynb` is built directly from the hand-written
-    # run_si_gstate.py / run_si_nscf.py / run_si_ebands.py (Task -> Flow
-    # progression for Si) -- those are NOT generated from workshop_lib.py,
-    # so there is no recipe for them here.
+    Recipe(
+        fname="run_si_gstate.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 1.
+
+The simplest possible unit of work in AbiPy: a single `AbinitTask` wrapping
+one `AbinitInput`, built and run directly -- no `Flow`, no `Work`, just one
+Task. Produces the ground-state density of silicon, which `run_si_nscf.py`
+(step 2) depends on.
+
+Usage
+-----
+    python run_si_gstate.py
+""",
+        chunks=["si_gs_input", "build_si_gs_task", "setup_task_manager"],
+        needs_si_cif=True,
+        kind="run_task",
+        build_expr="build_si_gs_task(workdir)",
+        timelimit_hour=0.1,
+    ),
+    Recipe(
+        fname="run_si_nscf.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 2.
+
+A second `AbinitTask` (non-self-consistent, along a k-point path), manually
+depending on the density produced by `run_si_gstate.py` (step 1) via a
+*hardcoded path* to that task's output directory. This works, but it's
+fragile -- if step 1's workdir changes, this breaks silently. `run_si_ebands.py`
+(step 3) shows how a `Flow` fixes that by tracking the dependency between
+tasks instead of a path.
+
+Usage
+-----
+    python run_si_gstate.py   # must run first -- produces the DEN file below
+    python run_si_nscf.py
+""",
+        chunks=["si_bandstructure_input", "build_si_nscf_task", "setup_task_manager"],
+        needs_si_cif=True,
+        needs_fcc_kpath=True,
+        kind="run_task",
+        build_expr="build_si_nscf_task(workdir, density='task_si_gstate/outdata/out_DEN.nc')",
+        timelimit_hour=0.5,
+    ),
+    Recipe(
+        fname="run_si_ebands.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 3.
+
+The same two tasks as `run_si_gstate.py` + `run_si_nscf.py` (steps 1-2),
+this time registered together in a `Work` inside a `Flow`, with the
+dependency expressed as `deps={gs_task: 'DEN'}` -- a reference to the task
+object itself, not a hardcoded path. This is the "Task to Flow" step: the
+same calculation, but AbiPy now tracks the dependency between tasks for
+you, which is what lets a `Flow` be built once and (re)run reliably,
+in the right order, however many tasks it has.
+
+Usage
+-----
+    python run_si_ebands.py
+""",
+        chunks=["si_gs_input", "build_si_gs_task", "si_bandstructure_input",
+                "build_si_nscf_task", "build_si_ebands_task_flow", "setup_manager"],
+        needs_si_cif=True,
+        needs_fcc_kpath=True,
+        kind="run_flow",
+        build_expr="build_si_ebands_task_flow(workdir)",
+        timelimit_hour=0.5,
+    ),
     Recipe(
         fname="make_gaas_convecut.py",
         docstring="""\
@@ -205,7 +292,8 @@ def render(recipe):
 
     chunks = [src(name) for name in recipe.chunks]
 
-    footer = f'''def build_flow(workdir=None):
+    if recipe.kind == "make_flow":
+        footer = f'''def build_flow(workdir=None):
     # Set working directory (default is constructed from the script name,
     # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
@@ -224,6 +312,75 @@ def render(recipe):
 if __name__ == "__main__":
     flow = build_flow()
     flow.build_and_pickle_dump()'''
+
+    elif recipe.kind == "run_task":
+        footer = f'''def main():
+
+    # Construct workdir from the file name
+    workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
+
+    # Initialize the task object
+    task = {recipe.build_expr}
+    task = setup_task_manager(task, mpi_procs=4, timelimit_hour={recipe.timelimit_hour})
+
+    # Remove a previous run, if it exists.
+    if Path(workdir).exists():
+        print(f'Removing existing directory: {{workdir}}/')
+        task.rmtree()
+
+    # Create directory, write inputs and link external files.
+    print(f'Building task in directory: {{workdir}}/')
+    task.build()
+    task.make_links()
+
+    # Run the calculation and wait for the result
+    print('Running task...')
+    task.start_and_wait()
+
+    # Report calculation status
+    status = task.check_status()
+    print(f'Status: {{status}}')
+
+
+if __name__ == "__main__":
+    main()'''
+
+    elif recipe.kind == "run_flow":
+        footer = f'''def main():
+
+    # Construct workdir from the file name
+    workdir = Path(__file__).name.replace(".py", "").replace("run_", "flow_")
+
+    # Initialize the flow object
+    flow = {recipe.build_expr}
+    flow = setup_manager(flow, mpi_procs=4, timelimit_hour={recipe.timelimit_hour})
+
+    # Remove a previous run, if it exists.
+    if Path(workdir).exists():
+        print(f'Removing existing directory: {{workdir}}/')
+        flow.rmtree()
+
+    # Create directory, write inputs and link external files.
+    print(f'Building flow in directory: {{workdir}}/')
+    flow.build_and_pickle_dump()
+
+    # Run each of the tasks sequentially and wait for the result.
+    print('Running flow...')
+    for work in flow:
+        for task in work:
+            task.start_and_wait()
+
+            # Report calculation status
+            name = task.name
+            status = task.check_status()
+            print(f'Status of task {{name}}: {{status}}')
+
+
+if __name__ == "__main__":
+    main()'''
+
+    else:
+        raise ValueError(f"Unknown recipe kind: {recipe.kind!r}")
 
     parts = ["\n".join(header)] + chunks + [footer]
     return "\n\n\n".join(parts) + "\n"
