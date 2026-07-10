@@ -7,7 +7,7 @@ Build an abinit calculation and run it.
 
 Usage
 -----
-    python run_gaas_ebands.py
+    python run_si_nscf.py
 """
 from pathlib import Path
 
@@ -22,13 +22,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
-GAAS_CIF = STRUCTURE_DIR / 'mp-2534_GaAs.cif'
-FCC_KPATH = [[0.5, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.5, 0.5]]
 
 def bandstructure_input(ecut=6):
     """Return a band structure input for GaAs."""
-    structure = Structure.from_file(str(GAAS_CIF))
-    pseudos = ["Ga.psp8", "As.psp8"]
+    structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
+    pseudos = ["Si.psp8"]
 
     inp = abilab.AbinitInput(structure=structure, pseudos=pseudos, pseudo_dir=str(PSEUDO_DIR))
 
@@ -39,18 +37,26 @@ def bandstructure_input(ecut=6):
     inp.set_vars(nband=40, tolwfr=1e-12)
 
     # We compute the eigenvalues along a k-point path between high symmetry points.
+    FCC_KPATH = [[0.5, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.5, 0.5]]
     inp.set_kpath(ndivsm=10, kptbounds=FCC_KPATH)
 
     return inp
 
-def build_bandstructure_task(workdir):
+
+def build_nscf_task(workdir, density):
+
+    # Create the input object
     inp = bandstructure_input()
-    deps = {'task_gaas_gstate/outdata/out_DEN.nc' : 'DEN'}
+
+    # Dependencies are specified as a dict of the form {file_or_task : property}
+    deps = {density : 'DEN'}
+
+    # Create the task object
     task = flowtk.AbinitTask(inp, workdir=workdir, deps=deps)
     return task
 
 
-def setup_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     manager = abilab.TaskManager.from_user_config()
     manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
     manager.qadapter.set_timelimit(3600 * timelimit_hour)
@@ -64,8 +70,8 @@ def main():
     workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
 
     # Initialize the task object
-    task = build_bandstructure_task(workdir)
-    task = setup_manager(task, mpi_procs=4, timelimit_hour=0.5)
+    task = build_nscf_task(workdir, density='task_si_gstate/outdata/out_DEN.nc')
+    task = setup_task_manager(task, mpi_procs=4, timelimit_hour=0.5)
 
     # Remove a previous run, if it exists.
     if Path(workdir).exists():

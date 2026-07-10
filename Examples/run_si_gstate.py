@@ -7,7 +7,7 @@ Build an abinit calculation and run it.
 
 Usage
 -----
-    python run_gaas_gstate.py
+    python run_si_gstate.py
 """
 from pathlib import Path
 
@@ -22,13 +22,12 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
-GAAS_CIF = STRUCTURE_DIR / 'mp-2534_GaAs.cif'
 
 
 def gs_input(ecut=6, ngkpt=(8, 8, 8)):
     """Return a GS input for GaAs on a homogeneous k-mesh."""
-    structure = Structure.from_file(str(GAAS_CIF))
-    pseudos = ["Ga.psp8", "As.psp8"]
+    structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
+    pseudos = ["Si.psp8"]
 
     inp = abilab.AbinitInput(structure=structure, pseudos=pseudos, pseudo_dir=str(PSEUDO_DIR))
     inp.set_vars(ecut=ecut, nband=16, paral_kgb=0, iomode=3)
@@ -43,7 +42,7 @@ def build_gs_task(workdir):
     return task
 
 
-def setup_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     manager = abilab.TaskManager.from_user_config()
     manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
     manager.qadapter.set_timelimit(3600 * timelimit_hour)
@@ -58,7 +57,7 @@ def main():
 
     # Initialize the task object
     task = build_gs_task(workdir)
-    task = setup_manager(task, mpi_procs=4, timelimit_hour=0.5)
+    task = setup_task_manager(task, mpi_procs=4, timelimit_hour=0.1)
 
     # Remove a previous run, if it exists.
     if Path(workdir).exists():
