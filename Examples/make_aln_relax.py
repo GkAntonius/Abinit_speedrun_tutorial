@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+"""
+Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+
+Builds the same flow as `workshop_lib.build_aln_relax_flow()`: a single
+relaxation task for AlN, with `ionmov=2` (Broyden atomic relaxation) and
+`optcell=1` (also optimize the cell volume, keeping its shape fixed --
+`rprim` unchanged, `acell` dilated isotropically), converging on the max
+force (`tolmxf`) instead of the `tolvrs` used for a fixed-geometry SCF run.
+This flow was already run ahead of time for the tutorial;
+`save_aln_structure.py` extracts the relaxed structure from its output.
+Re-run this script yourself if you want to reproduce or tweak it.
+
+Usage
+-----
+    python make_aln_relax.py
+    abirun.py flow_aln_relax scheduler
+"""
 from pathlib import Path
 
 import abipy.abilab as abilab
@@ -16,7 +33,9 @@ ALN_CIF = STRUCTURE_DIR / 'mp-661_AlN.cif'
 
 
 def aln_relax_input(ecut=12, ngkpt=(4, 4, 3)):
-    """Return a GS input for Si on a homogeneous k-mesh."""
+    """Return a relaxation input for AlN: relax atomic positions and the
+    cell volume (`ionmov=2`, `optcell=1`), converging on the max force
+    (`tolmxf`)."""
     structure = Structure.from_file(str(ALN_CIF))
     pseudos = ["Al.psp8", "N.psp8"]
 
@@ -24,35 +43,26 @@ def aln_relax_input(ecut=12, ngkpt=(4, 4, 3)):
     inp.set_vars(
         ecut=ecut,
         nband=14,
-
         ionmov=2,
         optcell=1,
         strfact=100,
         tolvrs=1e-6,
         tolmxf=1e-5,
         ntime=100,
-
-        #paral_kgb=0,
         iomode=3,
-        )
-
+    )
     inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
     return inp
 
 
 def build_aln_relax_flow(workdir):
-    relax_inp = aln_relax_input()
-
-    flow = flowtk.Flow(workdir)
-
-    # Register the task.
-    flow.register_relax_task(relax_inp)
-    #flow.register_task(relax_inp)
-
+    """Flow with a single relaxation task for AlN."""
+    flow = flowtk.Flow(workdir=workdir)
+    flow.register_relax_task(aln_relax_input())
     return flow
 
 
-def setup_flow_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     manager = flow.manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
     manager.qadapter.set_timelimit(3600 * timelimit_hour)
     for work in flow:
@@ -72,9 +82,8 @@ def build_flow(workdir=None):
         workdir = f"flow_{name}"
 
     flow = build_aln_relax_flow(workdir=workdir)
-    flow = setup_flow_manager(flow, mpi_procs=4, omp_threads=1)
+    flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
     return flow
-
 
 
 if __name__ == "__main__":

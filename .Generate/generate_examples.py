@@ -46,15 +46,16 @@ WORKDIR_DEFAULT_RE = re.compile(r'workdir="flow_[A-Za-z0-9_]*"')
 def src(name):
     """Source of a top-level function in workshop_lib.py, by name.
 
-    `gaas_structure()`/`si_structure()` calls are inlined as
-    `Structure.from_file(str(GAAS_CIF))`/`...(str(SI_CIF))` (so the
-    generated script doesn't need those two helpers), and a `workdir="flow_
-    ..."` default, if present, is stripped so the caller must always pass
-    `workdir` explicitly.
+    `gaas_structure()`/`si_structure()`/`aln_structure()` calls are inlined
+    as `Structure.from_file(str(GAAS_CIF))`/`...(str(SI_CIF))`/`...(str(ALN_CIF))`
+    (so the generated script doesn't need those three helpers), and a
+    `workdir="flow_..."` default, if present, is stripped so the caller must
+    always pass `workdir` explicitly.
     """
     text = inspect.getsource(getattr(wlib, name)).rstrip("\n")
     text = text.replace("gaas_structure()", "Structure.from_file(str(GAAS_CIF))")
     text = text.replace("si_structure()", "Structure.from_file(str(SI_CIF))")
+    text = text.replace("aln_structure()", "Structure.from_file(str(ALN_CIF))")
     text = WORKDIR_DEFAULT_RE.sub("workdir", text, count=1)
     return text
 
@@ -78,8 +79,8 @@ class Recipe:
     """
     def __init__(self, fname, docstring, chunks, entry_fn=None,
                  extra_imports="", needs_gaas_cif=False, needs_si_cif=False,
-                 needs_fcc_kpath=False, kind="make_flow", build_expr=None,
-                 timelimit_hour=2.0):
+                 needs_aln_cif=False, needs_fcc_kpath=False, kind="make_flow",
+                 build_expr=None, timelimit_hour=2.0):
         self.fname = fname
         self.docstring = docstring
         self.chunks = chunks
@@ -87,6 +88,7 @@ class Recipe:
         self.extra_imports = extra_imports
         self.needs_gaas_cif = needs_gaas_cif
         self.needs_si_cif = needs_si_cif
+        self.needs_aln_cif = needs_aln_cif
         self.needs_fcc_kpath = needs_fcc_kpath
         self.kind = kind
         self.build_expr = build_expr
@@ -255,6 +257,30 @@ Usage
         entry_fn="build_phonon_flow",
         needs_gaas_cif=True,
     ),
+    Recipe(
+        fname="make_aln_relax.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+
+Builds the same flow as `workshop_lib.build_aln_relax_flow()`: a single
+relaxation task for AlN, with `ionmov=2` (Broyden atomic relaxation) and
+`optcell=1` (also optimize the cell volume, keeping its shape fixed --
+`rprim` unchanged, `acell` dilated isotropically), converging on the max
+force (`tolmxf`) instead of the `tolvrs` used for a fixed-geometry SCF run.
+This flow was already run ahead of time for the tutorial;
+`save_aln_structure.py` extracts the relaxed structure from its output.
+Re-run this script yourself if you want to reproduce or tweak it.
+
+Usage
+-----
+    python make_aln_relax.py
+    abirun.py flow_aln_relax scheduler
+    abirun.py flow_aln_relax status
+""",
+        chunks=["aln_relax_input", "build_aln_relax_flow", "setup_manager"],
+        entry_fn="build_aln_relax_flow",
+        needs_aln_cif=True,
+    ),
 ]
 
 
@@ -287,6 +313,8 @@ def render(recipe):
         header.append(f"GAAS_CIF = STRUCTURE_DIR / {wlib.GAAS_CIF.name!r}")
     if recipe.needs_si_cif:
         header.append(f"SI_CIF = STRUCTURE_DIR / {wlib.SI_CIF.name!r}")
+    if recipe.needs_aln_cif:
+        header.append(f"ALN_CIF = STRUCTURE_DIR / {wlib.ALN_CIF.name!r}")
     if recipe.needs_fcc_kpath:
         header.append(f"FCC_KPATH = {wlib.FCC_KPATH!r}")
 

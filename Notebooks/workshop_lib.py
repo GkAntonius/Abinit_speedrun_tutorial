@@ -49,6 +49,7 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 
 GAAS_CIF = STRUCTURE_DIR / "mp-2534_GaAs.cif"
 SI_CIF = STRUCTURE_DIR / "mp-149_Si.cif"
+ALN_CIF = STRUCTURE_DIR / "mp-661_AlN.cif"
 
 # High-symmetry path L - Gamma - X, used for both GaAs and Si band structures.
 FCC_KPATH = [
@@ -66,6 +67,11 @@ def gaas_structure():
 def si_structure():
     """Return the AbiPy Structure for Si (Materials Project mp-149)."""
     return Structure.from_file(str(SI_CIF))
+
+
+def aln_structure():
+    """Return the AbiPy Structure for AlN (Materials Project mp-661)."""
+    return Structure.from_file(str(ALN_CIF))
 
 
 # ---------------------------------------------------------------------------
@@ -265,6 +271,42 @@ def build_phonon_flow(workdir="flow_gaas_phonons", ecut=8, ngkpt=(4, 4, 4), ph_n
     inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
 
     return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=True)
+
+
+# ---------------------------------------------------------------------------
+# 7) Structural relaxation (new).
+#    Relaxes both the atomic positions and the cell volume of AlN, driven by
+#    the computed forces and stresses -- see 2-Existing_flows.ipynb, section
+#    2.2, for the corresponding `ionmov`/`optcell` discussion.
+# ---------------------------------------------------------------------------
+def aln_relax_input(ecut=12, ngkpt=(4, 4, 3)):
+    """Return a relaxation input for AlN: relax atomic positions and the
+    cell volume (`ionmov=2`, `optcell=1`), converging on the max force
+    (`tolmxf`)."""
+    structure = aln_structure()
+    pseudos = ["Al.psp8", "N.psp8"]
+
+    inp = abilab.AbinitInput(structure=structure, pseudos=pseudos, pseudo_dir=str(PSEUDO_DIR))
+    inp.set_vars(
+        ecut=ecut,
+        nband=14,
+        ionmov=2,
+        optcell=1,
+        strfact=100,
+        tolvrs=1e-6,
+        tolmxf=1e-5,
+        ntime=100,
+        iomode=3,
+    )
+    inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
+    return inp
+
+
+def build_aln_relax_flow(workdir="flow_aln_relax"):
+    """Flow with a single relaxation task for AlN."""
+    flow = flowtk.Flow(workdir=workdir)
+    flow.register_relax_task(aln_relax_input())
+    return flow
 
 
 # ---------------------------------------------------------------------------
