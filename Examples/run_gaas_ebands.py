@@ -45,8 +45,8 @@ def bandstructure_input(ecut=6):
 
 def build_bandstructure_task(workdir):
     inp = bandstructure_input()
-    deps = {}  # FIXME
-    task = flowtk.AbinitTask(inp, workdir=workdir)
+    deps = {'task_gaas_gstate/outdata/out_DEN.nc' : 'DEN'}
+    task = flowtk.AbinitTask(inp, workdir=workdir, deps=deps)
     return task
 
 
@@ -64,20 +64,26 @@ def main():
     workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
 
     # Initialize the task object
-    task = build_gs_task(workdir)
+    task = build_bandstructure_task(workdir)
     task = setup_manager(task, mpi_procs=4, timelimit_hour=0.5)
 
     # Remove a previous run, if it exists.
     if Path(workdir).exists():
+        print(f'Removing existing directory: {workdir}/')
         task.rmtree()
 
     # Create directory, write inputs and link external files.
+    print(f'Building task in directory: {workdir}/')
     task.build()
     task.make_links()
 
     # Run the calculation and wait for the result
+    print('Running task...')
     task.start_and_wait()
-    print(task.check_status())
+
+    # Report calculation status
+    status = task.check_status()
+    print(f'Status: {status}')
 
 
 if __name__ == "__main__":

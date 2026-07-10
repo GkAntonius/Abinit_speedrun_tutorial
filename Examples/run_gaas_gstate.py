@@ -62,15 +62,21 @@ def main():
 
     # Remove a previous run, if it exists.
     if Path(workdir).exists():
+        print(f'Removing existing directory: {workdir}/')
         task.rmtree()
 
     # Create directory, write inputs and link external files.
+    print(f'Building task in directory: {workdir}/')
     task.build()
     task.make_links()
 
     # Run the calculation and wait for the result
+    print('Running task...')
     task.start_and_wait()
-    print(task.check_status())
+
+    # Report calculation status
+    status = task.check_status()
+    print(f'Status: {status}')
 
 
 if __name__ == "__main__":
