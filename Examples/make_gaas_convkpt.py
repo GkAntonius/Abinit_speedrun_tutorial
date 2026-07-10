@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """
-Companion to Section 4.2 ("k-point convergence") of the workshop notebook.
+Companion to `2.1-Convergence_study.ipynb` (k-point convergence).
 
 Builds the same flow as `workshop_lib.build_kpt_conv_flow()`: one SCF task
-per automatically-generated k-mesh density. After it completes, the
-notebook's `GsrRobot` cell collects the results and plots energy per atom
-against k-point density.
+per automatically-generated k-mesh density. This flow was already run ahead
+of time for the tutorial; the notebook's `GsrRobot` cell collects the
+results and plots energy per atom against k-point density. Re-run this
+script yourself if you want to reproduce or tweak it.
 
 Usage
 -----
@@ -60,9 +61,15 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 
 def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name)
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{name}"
 
     flow = build_kpt_conv_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

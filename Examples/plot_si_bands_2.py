@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """
-Companion to Section XXXXXX of the
-workshop notebook.
+Companion to `1-Task_to_flow.ipynb`, step 3 (plotting).
 
-Build an abinit calculation and run it.
+Plots the band structure from `flow_si_ebands/`, the output of the `Flow`
+version of the same calculation (`run_si_ebands.py`). Compare with
+`plot_si_bands_1.py`, which plots the same physics from the two
+manually-chained tasks instead.
 
 Usage
 -----
-    python run_si_nscf.py
+    python plot_si_bands_2.py
 """
 from pathlib import Path
 

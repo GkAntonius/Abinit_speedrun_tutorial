@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 """
-Companion to Section XXXXXX of the
-workshop notebook.
+Companion to `1-Task_to_flow.ipynb`, step 3.
 
-Build an abinit calculation and run it.
+The same two tasks as `run_si_gstate.py` + `run_si_nscf.py` (steps 1-2),
+this time registered together in a `Work` inside a `Flow`, with the
+dependency expressed as `deps={gs_task: 'DEN'}` -- a reference to the task
+object itself, not a hardcoded path. This is the "Task to Flow" step: the
+same calculation, but AbiPy now tracks the dependency between tasks for
+you, which is what lets a `Flow` be built once and (re)run reliably,
+in the right order, however many tasks it has.
 
 Usage
 -----
-    python run_si_nscf.py
+    python run_si_ebands.py
 """
 from pathlib import Path
 
@@ -24,7 +29,7 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 def gs_input(ecut=6, ngkpt=(8, 8, 8)):
-    """Return a GS input for GaAs on a homogeneous k-mesh."""
+    """Return a GS input for Si on a homogeneous k-mesh."""
     structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
     pseudos = ["Si.psp8"]
 
@@ -42,7 +47,7 @@ def build_gs_task(workdir):
 
 
 def bandstructure_input(ecut=6):
-    """Return a band structure input for GaAs."""
+    """Return a band structure input for Si."""
     structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
     pseudos = ["Si.psp8"]
 

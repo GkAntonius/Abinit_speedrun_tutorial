@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """
-Companion to Section 4.1 ("ecut convergence") of the workshop notebook.
+Companion to `2.1-Convergence_study.ipynb` (ecut convergence).
 
 Builds the same flow as `workshop_lib.build_ecut_conv_flow()`: one SCF task
-per value of `ecut`. After it completes, the notebook's `GsrRobot` /
-`ConvergenceAnalyzer` cells collect the results into a convergence plot.
+per value of `ecut`. This flow was already run ahead of time for the
+tutorial; the notebook's `GsrRobot` / `ConvergenceAnalyzer` cells collect
+the results into a convergence plot. Re-run this script yourself if you
+want to reproduce or tweak it.
 
 Usage
 -----
@@ -57,9 +59,15 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 
 def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name)
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{name}"
 
     flow = build_ecut_conv_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

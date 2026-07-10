@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
-Companion to Section 7 ("Phonons from DFPT") of the workshop notebook.
+Companion to `2.4-Phonons.ipynb`.
 
 Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
 task producing the WFK file, followed by the symmetry-irreducible DFPT
 atomic-perturbation tasks needed to assemble the dynamical matrix (and Born
-effective charges) on a coarse q-mesh. This has more tasks than the other
-example flows, so it is the best candidate for running in the background
-with `nohup` (see below) rather than waiting on it in a foreground shell.
+effective charges) on a coarse q-mesh. This flow was already run ahead of
+time for the tutorial -- it has more tasks than the others, so it's the
+best candidate for actually running yourself with `nohup` (see below)
+rather than waiting on it in a foreground shell.
 
 Usage
 -----
@@ -57,9 +58,15 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 
 def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name)
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{name}"
 
     flow = build_phonon_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

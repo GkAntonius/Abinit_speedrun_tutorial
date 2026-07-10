@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 """
-Companion to Section XXXXXX of the
-workshop notebook.
+Companion to `1-Task_to_flow.ipynb`, step 1.
 
-Build an abinit calculation and run it.
+The simplest possible unit of work in AbiPy: a single `AbinitTask` wrapping
+one `AbinitInput`, built and run directly -- no `Flow`, no `Work`, just one
+Task. Produces the ground-state density of silicon, which `run_si_nscf.py`
+(step 2) depends on.
 
 Usage
 -----
@@ -25,7 +27,7 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 
 
 def gs_input(ecut=6, ngkpt=(8, 8, 8)):
-    """Return a GS input for GaAs on a homogeneous k-mesh."""
+    """Return a GS input for Si on a homogeneous k-mesh."""
     structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
     pseudos = ["Si.psp8"]
 

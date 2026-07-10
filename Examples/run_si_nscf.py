@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 """
-Companion to Section XXXXXX of the
-workshop notebook.
+Companion to `1-Task_to_flow.ipynb`, step 2.
 
-Build an abinit calculation and run it.
+A second `AbinitTask` (non-self-consistent, along a k-point path), manually
+depending on the density produced by `run_si_gstate.py` (step 1) via a
+*hardcoded path* to that task's output directory. This works, but it's
+fragile -- if step 1's workdir changes, this breaks silently. `run_si_ebands.py`
+(step 3) shows how a `Flow` fixes that by tracking the dependency between
+tasks instead of a path.
 
 Usage
 -----
+    python run_si_gstate.py   # must run first -- produces the DEN file below
     python run_si_nscf.py
 """
 from pathlib import Path
@@ -24,7 +29,7 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 def bandstructure_input(ecut=6):
-    """Return a band structure input for GaAs."""
+    """Return a band structure input for Si."""
     structure = Structure.from_file(str(STRUCTURE_DIR / 'mp-149_Si.cif'))
     pseudos = ["Si.psp8"]
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 """
-Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
-notebook, GaAs half.
+Companion to `2.3-BandStructure.ipynb`.
 
 Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
-run along the L-Gamma-X path. See also `make_si_ebands.py` for the silicon
-comparison.
+run along the L-Gamma-X path. This flow was already run ahead of time for
+the tutorial -- a `bandstructure_flow` built in one call, in contrast with
+the manual, task-by-task Si band structure from `1-Task_to_flow.ipynb`
+(`run_si_gstate.py` / `run_si_nscf.py` / `run_si_ebands.py`). Compare the
+two: GaAs has a direct gap at Gamma, while silicon's fundamental gap is
+indirect.
 
 Usage
 -----
@@ -64,9 +67,15 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 
 def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name)
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{name}"
 
     flow = build_gaas_ebands_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)

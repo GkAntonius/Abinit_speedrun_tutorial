@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 """
-Generate the standalone `make_*.py` example scripts in this directory from
-`../Notebooks/workshop_lib.py`.
+Generate the standalone `run_*.py` / `make_*.py` example scripts in this
+directory from `../Notebooks/workshop_lib.py`.
 
-Why generate rather than hand-write: each `make_*.py` is meant to be copied
-by a student into their own work directory and run on its own, so it must
-NOT `import workshop_lib`. But the notebook's analysis cells assume the
-flows were built with *exactly* the same `AbinitInput`/`Flow` code as
+Naming convention: `run_gaas_gstate.py` (used in `1-Task_to_flow.ipynb`) is
+a `run_*` script -- simple enough to build and launch live, in one sitting.
+Everything under `2-Existing_flows.ipynb` (convergence, band structures,
+phonons) is a `make_*` script instead: these flows take longer, so they
+were already run ahead of time for the tutorial, and the notebooks mostly
+analyze their (pre-existing) results -- `make_*` here means "this is how
+that flow was constructed", not "run this now".
+
+Why generate rather than hand-write: each script is meant to be copied by a
+student into their own work directory and run on its own, so it must NOT
+`import workshop_lib`. But the notebooks' analysis cells assume the flows
+were built with *exactly* the same `AbinitInput`/`Flow` code as
 `workshop_lib.py` -- so hand-duplicating that code into each script would
 risk the two silently drifting apart. Instead, this script pulls the
 relevant functions (input builders, `build_*_flow()`, `setup_manager()`)
@@ -64,34 +72,20 @@ class Recipe:
 
 
 RECIPES = [
-    Recipe(
-        fname="make_gaas_gstate.py",
-        docstring="""\
-Companion to Section 3 ("Ground-state total energy of GaAs") of the
-workshop notebook.
-
-Builds the same flow as `workshop_lib.build_gs_flow()` and writes it to
-disk, so it can be launched and monitored from a terminal on the cluster
-instead of blocking the notebook kernel with `flow.make_scheduler().start()`.
-
-Usage
------
-    python make_gaas_gstate.py
-    abirun.py flow_gaas_gstate scheduler   # ... then run it (repeat if interrupted)
-    abirun.py flow_gaas_gstate status      # ... or just check progress
-""",
-        chunks=["gs_input", "build_gs_flow", "setup_manager"],
-        entry_fn="build_gs_flow",
-        needs_gaas_cif=True,
-    ),
+    # `1-Task_to_flow.ipynb` is built directly from the hand-written
+    # run_si_gstate.py / run_si_nscf.py / run_si_ebands.py (Task -> Flow
+    # progression for Si) -- those are NOT generated from workshop_lib.py,
+    # so there is no recipe for them here.
     Recipe(
         fname="make_gaas_convecut.py",
         docstring="""\
-Companion to Section 4.1 ("ecut convergence") of the workshop notebook.
+Companion to `2.1-Convergence_study.ipynb` (ecut convergence).
 
 Builds the same flow as `workshop_lib.build_ecut_conv_flow()`: one SCF task
-per value of `ecut`. After it completes, the notebook's `GsrRobot` /
-`ConvergenceAnalyzer` cells collect the results into a convergence plot.
+per value of `ecut`. This flow was already run ahead of time for the
+tutorial; the notebook's `GsrRobot` / `ConvergenceAnalyzer` cells collect
+the results into a convergence plot. Re-run this script yourself if you
+want to reproduce or tweak it.
 
 Usage
 -----
@@ -106,12 +100,13 @@ Usage
     Recipe(
         fname="make_gaas_convkpt.py",
         docstring="""\
-Companion to Section 4.2 ("k-point convergence") of the workshop notebook.
+Companion to `2.1-Convergence_study.ipynb` (k-point convergence).
 
 Builds the same flow as `workshop_lib.build_kpt_conv_flow()`: one SCF task
-per automatically-generated k-mesh density. After it completes, the
-notebook's `GsrRobot` cell collects the results and plots energy per atom
-against k-point density.
+per automatically-generated k-mesh density. This flow was already run ahead
+of time for the tutorial; the notebook's `GsrRobot` cell collects the
+results and plots energy per atom against k-point density. Re-run this
+script yourself if you want to reproduce or tweak it.
 
 Usage
 -----
@@ -126,13 +121,16 @@ Usage
     Recipe(
         fname="make_gaas_ebands.py",
         docstring="""\
-Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
-notebook, GaAs half.
+Companion to `2.3-BandStructure.ipynb`.
 
 Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
-run along the L-Gamma-X path. See also `make_si_ebands.py` for the silicon
-comparison.
+run along the L-Gamma-X path. This flow was already run ahead of time for
+the tutorial -- a `bandstructure_flow` built in one call, in contrast with
+the manual, task-by-task Si band structure from `1-Task_to_flow.ipynb`
+(`run_si_gstate.py` / `run_si_nscf.py` / `run_si_ebands.py`). Compare the
+two: GaAs has a direct gap at Gamma, while silicon's fundamental gap is
+indirect.
 
 Usage
 -----
@@ -146,64 +144,17 @@ Usage
         needs_fcc_kpath=True,
     ),
     Recipe(
-        fname="make_si_ebands.py",
-        docstring="""\
-Companion to Section 5 ("Band structures: GaAs vs Si") of the workshop
-notebook, Si half.
-
-Builds the same flow as `workshop_lib.build_si_ebands_flow()`: a
-ground-state run on a homogeneous k-mesh followed by a non-self-consistent
-run along the L-Gamma-X path, this time for silicon. See also
-`make_gaas_ebands.py` for the GaAs run this is compared against -- GaAs has a
-direct gap at Gamma, while silicon's fundamental gap is indirect.
-
-Usage
------
-    python make_si_ebands.py
-    abirun.py flow_si_ebands scheduler
-    abirun.py flow_si_ebands status
-""",
-        chunks=["_bandstructure_inputs", "build_si_ebands_flow", "setup_manager"],
-        entry_fn="build_si_ebands_flow",
-        needs_si_cif=True,
-        needs_fcc_kpath=True,
-    ),
-    Recipe(
-        fname="make_gaas_eos.py",
-        docstring="""\
-Companion to Section 6 ("Equation of state and the lattice parameter") of
-the workshop notebook.
-
-Builds the same flow as `workshop_lib.build_eos_flow()`: one SCF task per
-isotropically-scaled volume of GaAs around its experimental volume. After it
-completes, the notebook fits the energy-volume curve with a Birch-Murnaghan
-equation of state (`abilab.EOS`) to get the equilibrium volume and bulk
-modulus. As noted in the notebook, this flow deliberately uses a coarse
-`ecut`/k-mesh to stay cheap -- treat the numbers as illustrative, not
-converged.
-
-Usage
------
-    python make_gaas_eos.py
-    abirun.py flow_gaas_eos scheduler
-    abirun.py flow_gaas_eos status
-""",
-        chunks=["build_eos_flow", "setup_manager"],
-        entry_fn="build_eos_flow",
-        extra_imports="import numpy as np",
-        needs_gaas_cif=True,
-    ),
-    Recipe(
         fname="make_gaas_phonons.py",
         docstring="""\
-Companion to Section 7 ("Phonons from DFPT") of the workshop notebook.
+Companion to `2.4-Phonons.ipynb`.
 
 Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
 task producing the WFK file, followed by the symmetry-irreducible DFPT
 atomic-perturbation tasks needed to assemble the dynamical matrix (and Born
-effective charges) on a coarse q-mesh. This has more tasks than the other
-example flows, so it is the best candidate for running in the background
-with `nohup` (see below) rather than waiting on it in a foreground shell.
+effective charges) on a coarse q-mesh. This flow was already run ahead of
+time for the tutorial -- it has more tasks than the others, so it's the
+best candidate for actually running yourself with `nohup` (see below)
+rather than waiting on it in a foreground shell.
 
 Usage
 -----
@@ -255,9 +206,15 @@ def render(recipe):
     chunks = [src(name) for name in recipe.chunks]
 
     footer = f'''def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name)
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
     if not workdir:
-        workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{{name}}"
 
     flow = {recipe.entry_fn}(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
