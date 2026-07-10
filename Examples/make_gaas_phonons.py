@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Companion to `2.4-Phonons.ipynb`.
+Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons).
 
 Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
 task producing the WFK file, followed by the symmetry-irreducible DFPT

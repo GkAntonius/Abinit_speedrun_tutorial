@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Companion to `2.1-Convergence_study.ipynb` (ecut convergence).
+Companion to `2-Existing_flows.ipynb`, section 2.1 (ecut convergence).
 
 Builds the same flow as `workshop_lib.build_ecut_conv_flow()`: one SCF task
 per value of `ecut`. This flow was already run ahead of time for the

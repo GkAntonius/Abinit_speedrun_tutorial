@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Companion to `2.3-BandStructure.ipynb`.
+Companion to `2-Existing_flows.ipynb`, section 2.3 (band structure).
 
 Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent

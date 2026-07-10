@@ -79,7 +79,7 @@ RECIPES = [
     Recipe(
         fname="make_gaas_convecut.py",
         docstring="""\
-Companion to `2.1-Convergence_study.ipynb` (ecut convergence).
+Companion to `2-Existing_flows.ipynb`, section 2.1 (ecut convergence).
 
 Builds the same flow as `workshop_lib.build_ecut_conv_flow()`: one SCF task
 per value of `ecut`. This flow was already run ahead of time for the
@@ -100,7 +100,7 @@ Usage
     Recipe(
         fname="make_gaas_convkpt.py",
         docstring="""\
-Companion to `2.1-Convergence_study.ipynb` (k-point convergence).
+Companion to `2-Existing_flows.ipynb`, section 2.1 (k-point convergence).
 
 Builds the same flow as `workshop_lib.build_kpt_conv_flow()`: one SCF task
 per automatically-generated k-mesh density. This flow was already run ahead
@@ -121,7 +121,7 @@ Usage
     Recipe(
         fname="make_gaas_ebands.py",
         docstring="""\
-Companion to `2.3-BandStructure.ipynb`.
+Companion to `2-Existing_flows.ipynb`, section 2.3 (band structure).
 
 Builds the same flow as `workshop_lib.build_gaas_ebands_flow()`: a
 ground-state run on a homogeneous k-mesh followed by a non-self-consistent
@@ -146,7 +146,7 @@ Usage
     Recipe(
         fname="make_gaas_phonons.py",
         docstring="""\
-Companion to `2.4-Phonons.ipynb`.
+Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons).
 
 Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
 task producing the WFK file, followed by the symmetry-irreducible DFPT
