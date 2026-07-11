@@ -13,8 +13,8 @@ bash ../setup_environment.sh
 (from `Tutorial/Installation/`; see `Tutorial/setup_environment.sh` for what
 it does). It will:
 
-1. Create `~/.abinit/abipy/` and copy `abinit/abipy/manager.yml` and
-   `abinit/abipy/scheduler.yml` there -- this tells AbiPy how to launch
+1. Create `~/.abinit/abipy/` and copy ` abinit-config/default/abipy/manager.yml` and
+   ` abinit-config/default/abipy/scheduler.yml` there -- this tells AbiPy how to launch
    Abinit runs on this cluster (how many cores, which queue, etc.).
 2. Check that the `abinit` executable is on your `$PATH` (loading the
    `abinit` module if needed).
@@ -30,8 +30,8 @@ If you'd rather do it by hand:
 
 ```
 mkdir -p ~/.abinit/abipy
-cp abinit/abipy/manager.yml ~/.abinit/abipy/
-cp abinit/abipy/scheduler.yml ~/.abinit/abipy/
+cp abinit-config/default/abipy/manager.yml ~/.abinit/abipy/
+cp  abinit-config/default/abipy/scheduler.yml ~/.abinit/abipy/
 ```
 
 Then check your installation with:
