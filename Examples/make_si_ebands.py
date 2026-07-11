@@ -12,7 +12,8 @@ in the right order, however many tasks it has.
 
 Usage
 -----
-    python run_si_ebands.py
+    python make_si_ebands.py
+    abirun.py flow_si_ebands scheduler
 """
 from pathlib import Path
 
@@ -101,35 +102,22 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     return flow
 
 
-def main():
+def build_flow(workdir=None):
+    # Set working directory (default is constructed from the script name,
+    # stripping a leading "run_" or "make_" and prepending "flow_").
+    if not workdir:
+        name = Path(__file__).name.replace(".py", "")
+        for prefix in ("run_", "make_"):
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        workdir = f"flow_{name}"
 
-    # Construct workdir from the file name
-    workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
-
-    # Initialize the flow object
-    flow = build_si_ebands_task_flow(workdir)
-    flow = setup_manager(flow, mpi_procs=4, timelimit_hour=0.5)
-
-    # Remove a previous run, if it exists.
-    if Path(workdir).exists():
-        print(f'Removing existing directory: {workdir}/')
-        flow.rmtree()
-
-    # Create directory, write inputs and link external files.
-    print(f'Building flow in directory: {workdir}/')
-    flow.build_and_pickle_dump()
-
-    # Run each of the tasks sequentially and wait for the result.
-    #print('Running flow...')
-    #for work in flow:
-    #    for task in work:
-    #        task.start_and_wait()
-
-    #        # Report calculation status
-    #        name = task.name
-    #        status = task.check_status()
-    #        print(f'Status of task {name}: {status}')
+    flow = None(workdir=workdir)
+    flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
+    return flow
 
 
 if __name__ == "__main__":
-    main()
+    flow = build_flow()
+    flow.build_and_pickle_dump()

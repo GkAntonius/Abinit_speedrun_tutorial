@@ -17,9 +17,12 @@ The Si Task/Flow builders (`si_gs_input`, `build_si_gs_task`,
 `1-Task_to_flow.ipynb` -- see `../.Examples_generate/generate_examples.py`.
 
 The equation-of-state and DFPT phonon builders are new for this workshop.
-The phonon flow is a simplified version -- applied to GaAs instead of GaP,
+The phonon flow is a simplified version -- applied to MgO instead of GaP,
 and on a much coarser q-mesh so that it can run in the time available --
 of the production DFPT workflow originally in GWPT/Production/020-GaP-dfpt.
+MgO is used instead of GaAs here because it's strongly ionic/polar, which
+makes the LO-TO splitting (driven by the Born effective charges) much more
+visible than it would be for GaAs.
 
 This module expects to live in Tutorial/Notebooks/, next to a sibling
 Tutorial/Data/ directory containing:
@@ -50,6 +53,7 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 GAAS_CIF = STRUCTURE_DIR / "mp-2534_GaAs.cif"
 SI_CIF = STRUCTURE_DIR / "mp-149_Si.cif"
 ALN_CIF = STRUCTURE_DIR / "mp-661_AlN.cif"
+MGO_CIF = STRUCTURE_DIR / "mp-1265_MgO.cif"
 
 # High-symmetry path L - Gamma - X, used for both GaAs and Si band structures.
 FCC_KPATH = [
@@ -72,6 +76,11 @@ def si_structure():
 def aln_structure():
     """Return the AbiPy Structure for AlN (Materials Project mp-661)."""
     return Structure.from_file(str(ALN_CIF))
+
+
+def mgo_structure():
+    """Return the AbiPy Structure for MgO (Materials Project mp-1265)."""
+    return Structure.from_file(str(MGO_CIF))
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +161,7 @@ def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 
 # ---------------------------------------------------------------------------
-# 1) Ground-state total energy  (Production/004-GaAs-gs)
+# 1) Ground-state total energy.
 # ---------------------------------------------------------------------------
 def gs_input(ecut=6, ngkpt=(8, 8, 8)):
     """Return a GS input for GaAs on a homogeneous k-mesh."""
@@ -174,7 +183,7 @@ def build_gs_flow(workdir="flow_gaas_gstate"):
 
 
 # ---------------------------------------------------------------------------
-# 2) ecut convergence  (Production/005-GaAs-conv-ecut)
+# 2) ecut convergence.
 # ---------------------------------------------------------------------------
 def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 40, 5)):
     """Flow with one SCF task per value of ecut."""
@@ -185,7 +194,7 @@ def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 40, 5
 
 
 # ---------------------------------------------------------------------------
-# 3) k-point convergence  (Production/006-GaAs-conv-kpt)
+# 3) k-point convergence.
 # ---------------------------------------------------------------------------
 def build_kpt_conv_flow(workdir="flow_gaas_convkpt", nk_list=(1, 2, 4, 6, 8, 10)):
     """Flow with one SCF task per (automatically-generated) k-mesh density."""
@@ -198,7 +207,7 @@ def build_kpt_conv_flow(workdir="flow_gaas_convkpt", nk_list=(1, 2, 4, 6, 8, 10)
 
 
 # ---------------------------------------------------------------------------
-# 4) Band structures  (Production/007-GaAs-ebands, 008-Si-ebands)
+# 4) Band structures.
 # ---------------------------------------------------------------------------
 def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
                            nband_scf=16, nband_nscf=40):
@@ -232,7 +241,7 @@ def build_si_ebands_flow(workdir="flow_si_ebands"):
 
 
 # ---------------------------------------------------------------------------
-# 5) Equation of state / lattice parameter (new).
+# 5) Equation of state / lattice parameter.
 #    Several GS runs at scaled volumes around the experimental/relaxed
 #    volume, then a Birch-Murnaghan fit with abilab.EOS -- the same idea
 #    as the "Determination of the lattice parameters" section of the AbiPy
@@ -256,25 +265,25 @@ def build_eos_flow(workdir="flow_gaas_eos", scale_volumes=tuple(np.arange(0.94, 
 
 
 # ---------------------------------------------------------------------------
-# 6) DFPT phonons (new; simplified/adapted from GWPT/Production/020-GaP-dfpt).
+# 6) DFPT phonons.
 # ---------------------------------------------------------------------------
-def build_phonon_flow(workdir="flow_gaas_phonons", ecut=8, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
+def build_mgo_phonon_flow(workdir="flow_mgo_phonons", ecut=16, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
     """
-    PhononFlow for GaAs: one GS task producing the WFK file used by DFPT,
+    PhononFlow for MgO: one GS task producing the WFK file used by DFPT,
     followed by the (symmetry-irreducible) atomic-perturbation tasks needed
     to build the dynamical matrix on a `ph_ngqpt` q-mesh.
     """
-    structure = gaas_structure()
-    inp = abilab.AbinitInput(structure=structure, pseudos=["Ga.psp8", "As.psp8"],
+    structure = mgo_structure()
+    inp = abilab.AbinitInput(structure=structure, pseudos=["Mg.psp8", "O.psp8"],
                               pseudo_dir=str(PSEUDO_DIR))
-    inp.set_vars(ecut=ecut, nband=16, paral_kgb=0, iomode=3, tolvrs=1e-8)
+    inp.set_vars(ecut=ecut, nband=12, paral_kgb=0, iomode=3, tolvrs=1e-8)
     inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
 
-    return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=True)
+    return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=False)
 
 
 # ---------------------------------------------------------------------------
-# 7) Structural relaxation (new).
+# 7) Structural relaxation.
 #    Relaxes both the atomic positions and the cell volume of AlN, driven by
 #    the computed forces and stresses -- see 2-Existing_flows.ipynb, section
 #    2.2, for the corresponding `ionmov`/`optcell` discussion.

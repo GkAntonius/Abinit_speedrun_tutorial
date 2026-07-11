@@ -166,6 +166,32 @@ Usage
         timelimit_hour=0.5,
     ),
     Recipe(
+        fname="make_si_ebands.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 3.
+
+The same two tasks as `run_si_gstate.py` + `run_si_nscf.py` (steps 1-2),
+this time registered together in a `Work` inside a `Flow`, with the
+dependency expressed as `deps={gs_task: 'DEN'}` -- a reference to the task
+object itself, not a hardcoded path. This is the "Task to Flow" step: the
+same calculation, but AbiPy now tracks the dependency between tasks for
+you, which is what lets a `Flow` be built once and (re)run reliably,
+in the right order, however many tasks it has.
+
+Usage
+-----
+    python make_si_ebands.py
+    abirun.py flow_si_ebands scheduler
+""",
+        chunks=["si_gs_input", "build_si_gs_task", "si_bandstructure_input",
+                "build_si_nscf_task", "build_si_ebands_task_flow", "setup_manager"],
+        needs_si_cif=True,
+        needs_fcc_kpath=True,
+        kind="make_flow",
+        build_expr="build_si_ebands_task_flow(workdir)",
+        timelimit_hour=0.5,
+    ),
+    Recipe(
         fname="make_gaas_convecut.py",
         docstring="""\
 Companion to `2-Existing_flows.ipynb`, section 2.1 (ecut convergence).
@@ -412,6 +438,8 @@ if __name__ == "__main__":
 
     parts = ["\n".join(header)] + chunks + [footer]
     return "\n\n\n".join(parts) + "\n"
+
+# =========================================================================== #
 
 
 def main():

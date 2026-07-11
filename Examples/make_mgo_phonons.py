@@ -2,21 +2,24 @@
 """
 Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons).
 
-Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
-task producing the WFK file, followed by the symmetry-irreducible DFPT
-atomic-perturbation tasks needed to assemble the dynamical matrix (and Born
-effective charges) on a coarse q-mesh. This flow was already run ahead of
-time for the tutorial -- it has more tasks than the others, so it's the
-best candidate for actually running yourself with `nohup` (see below)
-rather than waiting on it in a foreground shell.
+Builds the same flow as `workshop_lib.build_mgo_phonon_flow()`: a
+ground-state task producing the WFK file, followed by the
+symmetry-irreducible DFPT atomic-perturbation tasks needed to assemble the
+dynamical matrix (and Born effective charges) on a coarse q-mesh. This flow
+was already run ahead of time for the tutorial -- it has more tasks than
+the others, so it's the best candidate for actually running yourself with
+`nohup` (see below) rather than waiting on it in a foreground shell.
+
+MgO (rocksalt) is a strongly ionic, polar material -- a good showcase for
+the LO-TO splitting driven by the Born effective charges computed here.
 
 Usage
 -----
-    python make_gaas_phonons.py
-    abirun.py flow_gaas_phonons scheduler   # repeat if interrupted
-    abirun.py flow_gaas_phonons status       # check progress / list tasks
+    python make_mgo_phonons.py
+    abirun.py flow_mgo_phonons scheduler   # repeat if interrupted
+    abirun.py flow_mgo_phonons status       # check progress / list tasks
 
-    nohup python make_gaas_phonons.py > log 2> err &   # ... run in the background
+    nohup python make_mgo_phonons.py > log 2> err &   # ... run in the background
 """
 from pathlib import Path
 
@@ -31,19 +34,19 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
-GAAS_CIF = STRUCTURE_DIR / 'mp-2534_GaAs.cif'
+MGO_CIF = STRUCTURE_DIR / 'mp-1265_MgO.cif'
 
 
-def build_phonon_flow(workdir, ecut=8, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
+def build_mgo_phonon_flow(workdir, ecut=8, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
     """
-    PhononFlow for GaAs: one GS task producing the WFK file used by DFPT,
+    PhononFlow for MgO: one GS task producing the WFK file used by DFPT,
     followed by the (symmetry-irreducible) atomic-perturbation tasks needed
     to build the dynamical matrix on a `ph_ngqpt` q-mesh.
     """
-    structure = Structure.from_file(str(GAAS_CIF))
-    inp = abilab.AbinitInput(structure=structure, pseudos=["Ga.psp8", "As.psp8"],
+    structure = Structure.from_file(str(MGO_CIF))
+    inp = abilab.AbinitInput(structure=structure, pseudos=["Mg.psp8", "O.psp8"],
                               pseudo_dir=str(PSEUDO_DIR))
-    inp.set_vars(ecut=ecut, nband=16, paral_kgb=0, iomode=3, tolvrs=1e-8)
+    inp.set_vars(ecut=ecut, nband=12, paral_kgb=0, iomode=3, tolvrs=1e-8)
     inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
 
     return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=True)
@@ -68,7 +71,7 @@ def build_flow(workdir=None):
                 break
         workdir = f"flow_{name}"
 
-    flow = build_phonon_flow(workdir=workdir)
+    flow = build_mgo_phonon_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
     return flow
 
