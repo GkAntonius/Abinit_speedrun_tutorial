@@ -10,7 +10,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_SRC="$SCRIPT_DIR/Installation/abinit/abipy"
+CONFIG_SRC="$SCRIPT_DIR/abinit-config/default/abipy"
 CONFIG_DST="$HOME/.abinit/abipy"
 
 echo "=== CEMDI 2026 -- Abinit/AbiPy environment setup ==="
@@ -21,9 +21,14 @@ echo "=== CEMDI 2026 -- Abinit/AbiPy environment setup ==="
 echo
 echo "--- Step 1/3: AbiPy configuration ---"
 mkdir -p "$CONFIG_DST"
-cp "$CONFIG_SRC/manager.yml" "$CONFIG_DST/manager.yml"
-cp "$CONFIG_SRC/scheduler.yml" "$CONFIG_DST/scheduler.yml"
-echo "Copied manager.yml and scheduler.yml to $CONFIG_DST"
+for f in manager.yml scheduler.yml; do
+    if [ -e "$CONFIG_DST/$f" ]; then
+        echo "$CONFIG_DST/$f already exists -- leaving it untouched."
+    else
+        cp "$CONFIG_SRC/$f" "$CONFIG_DST/$f"
+        echo "Copied $f to $CONFIG_DST"
+    fi
+done
 
 # ---------------------------------------------------------------------------
 # 2) Abinit executable
@@ -72,4 +77,4 @@ fi
 echo
 echo "=== Setup complete ==="
 echo "Check everything is in order with: abicheck.py"
-echo "Then open Tutorial/Notebooks/1_running_calculations.ipynb"
+echo "Then open Tutorial/Notebooks/0-Setup.ipynb"
