@@ -15,6 +15,7 @@ Usage
 -----
     python make_aln_relax.py
     abirun.py flow_aln_relax scheduler
+    abirun.py flow_aln_relax status
 """
 from pathlib import Path
 

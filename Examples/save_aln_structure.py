@@ -27,21 +27,20 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 
 def main():
     # Get flow directory
-    dirname = SCRIPT_DIR / 'flow_aln_relax'
-    flow = flowtk.Flow.from_file(dirname)     # Open flow object.
+    workdir = SCRIPT_DIR / 'flow_aln_relax'
+    flow = flowtk.Flow.from_file(workdir)     # Open flow object.
     task = flow[0][0]                         # Select the first task of the first work.
     gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
 
     # Extract results
     gsr = abilab.abiopen(str(gsr_path))
     structure = gsr.structure
+    print(structure)
 
     # Make file name for the relaxed structure
-    savedir = Path('Data')
-    savedir.mkdir(exist_ok=True)
+    savedir = Path('Data');  savedir.mkdir(exist_ok=True)
     filename = savedir / 'AlN_relaxed.cif'
 
-    print(structure)
     print(filename)
     structure.to(filename=str(filename))
 

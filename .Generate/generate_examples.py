@@ -46,16 +46,17 @@ WORKDIR_DEFAULT_RE = re.compile(r'workdir="flow_[A-Za-z0-9_]*"')
 def src(name):
     """Source of a top-level function in workshop_lib.py, by name.
 
-    `gaas_structure()`/`si_structure()`/`aln_structure()` calls are inlined
-    as `Structure.from_file(str(GAAS_CIF))`/`...(str(SI_CIF))`/`...(str(ALN_CIF))`
-    (so the generated script doesn't need those three helpers), and a
-    `workdir="flow_..."` default, if present, is stripped so the caller must
-    always pass `workdir` explicitly.
+    `gaas_structure()`/`si_structure()`/`aln_structure()`/`mgo_structure()`
+    calls are inlined as `Structure.from_file(str(GAAS_CIF))`/`...(str(SI_CIF))`/
+    `...(str(ALN_CIF))`/`...(str(MGO_CIF))` (so the generated script doesn't
+    need those four helpers), and a `workdir="flow_..."` default, if
+    present, is stripped so the caller must always pass `workdir` explicitly.
     """
     text = inspect.getsource(getattr(wlib, name)).rstrip("\n")
     text = text.replace("gaas_structure()", "Structure.from_file(str(GAAS_CIF))")
     text = text.replace("si_structure()", "Structure.from_file(str(SI_CIF))")
     text = text.replace("aln_structure()", "Structure.from_file(str(ALN_CIF))")
+    text = text.replace("mgo_structure()", "Structure.from_file(str(MGO_CIF))")
     text = WORKDIR_DEFAULT_RE.sub("workdir", text, count=1)
     return text
 
@@ -79,8 +80,8 @@ class Recipe:
     """
     def __init__(self, fname, docstring, chunks, entry_fn=None,
                  extra_imports="", needs_gaas_cif=False, needs_si_cif=False,
-                 needs_aln_cif=False, needs_fcc_kpath=False, kind="make_flow",
-                 build_expr=None, timelimit_hour=2.0):
+                 needs_aln_cif=False, needs_mgo_cif=False, needs_fcc_kpath=False,
+                 kind="make_flow", build_expr=None, timelimit_hour=2.0):
         self.fname = fname
         self.docstring = docstring
         self.chunks = chunks
@@ -89,6 +90,7 @@ class Recipe:
         self.needs_gaas_cif = needs_gaas_cif
         self.needs_si_cif = needs_si_cif
         self.needs_aln_cif = needs_aln_cif
+        self.needs_mgo_cif = needs_mgo_cif
         self.needs_fcc_kpath = needs_fcc_kpath
         self.kind = kind
         self.build_expr = build_expr
@@ -259,29 +261,32 @@ Usage
         needs_fcc_kpath=True,
     ),
     Recipe(
-        fname="make_gaas_phonons.py",
+        fname="make_mgo_phonons.py",
         docstring="""\
 Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons).
 
-Builds the same flow as `workshop_lib.build_phonon_flow()`: a ground-state
-task producing the WFK file, followed by the symmetry-irreducible DFPT
-atomic-perturbation tasks needed to assemble the dynamical matrix (and Born
-effective charges) on a coarse q-mesh. This flow was already run ahead of
-time for the tutorial -- it has more tasks than the others, so it's the
-best candidate for actually running yourself with `nohup` (see below)
-rather than waiting on it in a foreground shell.
+Builds the same flow as `workshop_lib.build_mgo_phonon_flow()`: a
+ground-state task producing the WFK file, followed by the
+symmetry-irreducible DFPT atomic-perturbation tasks needed to assemble the
+dynamical matrix (and Born effective charges) on a coarse q-mesh. This flow
+was already run ahead of time for the tutorial -- it has more tasks than
+the others, so it's the best candidate for actually running yourself with
+`nohup` (see below) rather than waiting on it in a foreground shell.
+
+MgO (rocksalt) is a strongly ionic, polar material -- a good showcase for
+the LO-TO splitting driven by the Born effective charges computed here.
 
 Usage
 -----
-    python make_gaas_phonons.py
-    abirun.py flow_gaas_phonons scheduler   # repeat if interrupted
-    abirun.py flow_gaas_phonons status       # check progress / list tasks
+    python make_mgo_phonons.py
+    abirun.py flow_mgo_phonons scheduler   # repeat if interrupted
+    abirun.py flow_mgo_phonons status       # check progress / list tasks
 
-    nohup python make_gaas_phonons.py > log 2> err &   # ... run in the background
+    nohup python make_mgo_phonons.py > log 2> err &   # ... run in the background
 """,
-        chunks=["build_phonon_flow", "setup_manager"],
-        entry_fn="build_phonon_flow",
-        needs_gaas_cif=True,
+        chunks=["build_mgo_phonon_flow", "setup_manager"],
+        entry_fn="build_mgo_phonon_flow",
+        needs_mgo_cif=True,
     ),
     Recipe(
         fname="make_aln_relax.py",
@@ -341,6 +346,8 @@ def render(recipe):
         header.append(f"SI_CIF = STRUCTURE_DIR / {wlib.SI_CIF.name!r}")
     if recipe.needs_aln_cif:
         header.append(f"ALN_CIF = STRUCTURE_DIR / {wlib.ALN_CIF.name!r}")
+    if recipe.needs_mgo_cif:
+        header.append(f"MGO_CIF = STRUCTURE_DIR / {wlib.MGO_CIF.name!r}")
     if recipe.needs_fcc_kpath:
         header.append(f"FCC_KPATH = {wlib.FCC_KPATH!r}")
 

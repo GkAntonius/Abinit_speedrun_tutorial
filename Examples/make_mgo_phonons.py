@@ -37,7 +37,7 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 MGO_CIF = STRUCTURE_DIR / 'mp-1265_MgO.cif'
 
 
-def build_mgo_phonon_flow(workdir, ecut=8, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
+def build_mgo_phonon_flow(workdir, ecut=24, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
     """
     PhononFlow for MgO: one GS task producing the WFK file used by DFPT,
     followed by the (symmetry-irreducible) atomic-perturbation tasks needed
@@ -49,7 +49,7 @@ def build_mgo_phonon_flow(workdir, ecut=8, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
     inp.set_vars(ecut=ecut, nband=12, paral_kgb=0, iomode=3, tolvrs=1e-8)
     inp.set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
 
-    return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=True)
+    return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=False)
 
 
 def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
