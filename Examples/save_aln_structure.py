@@ -16,6 +16,7 @@ from pathlib import Path
 
 import abipy.abilab as abilab
 import abipy.flowtk as flowtk
+from abipy.abilab import Structure
 
 # This script is meant to be copied -- together with the rest of this
 # Tutorial/ directory -- into your own work directory. Data/Pseudos and
@@ -24,6 +25,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
+
 
 def main():
     # Get flow directory

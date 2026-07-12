@@ -10,8 +10,11 @@ and print their own status when done. Everything under
 `make_*` script instead: these flows take longer, so they were already run
 ahead of time for the tutorial, and the notebooks mostly analyze their
 (pre-existing) results -- `make_*` here means "this is how that flow was
-constructed", not "run this now". Both flavors are generated the same way,
-via a `Recipe.kind` (see below) that only changes the `main()` footer.
+constructed", not "run this now". `run_*_anaddb.py` and `plot_*.py` scripts
+are a third flavor: they don't build a Task/Flow at all, just open the
+output of one that already ran and post-process/plot it. All flavors are
+generated the same way, via a `Recipe.kind` (see below) that only changes
+the part of the script after the header/path setup.
 
 Why generate rather than hand-write: each script is meant to be copied by a
 student into their own work directory and run on its own, so it must NOT
@@ -73,15 +76,20 @@ class Recipe:
     * "run_flow" -- builds a Flow but, instead of a scheduler, runs each of
       its Tasks synchronously in a plain loop. Used by step 3 of
       `1-Task_to_flow.ipynb`.
+    * "script" -- doesn't build anything; `body` is the literal `main()` (+
+      `if __name__ == "__main__":` guard) of a script that just opens the
+      output of an existing Task/Flow/anaddb run and post-processes or
+      plots it. Used by `save_aln_structure.py`, `plot_si_bands_*.py`,
+      `run_mgo_anaddb.py` and `plot_mgo_phonons.py`.
 
     `build_expr` is the expression (given `workdir`) that builds the
     Task/Flow for "run_task"/"run_flow"; "make_flow" instead calls
     `entry_fn(workdir=workdir)`.
     """
-    def __init__(self, fname, docstring, chunks, entry_fn=None,
+    def __init__(self, fname, docstring, chunks=(), entry_fn=None,
                  extra_imports="", needs_gaas_cif=False, needs_si_cif=False,
                  needs_aln_cif=False, needs_mgo_cif=False, needs_fcc_kpath=False,
-                 kind="make_flow", build_expr=None, timelimit_hour=2.0):
+                 kind="make_flow", build_expr=None, timelimit_hour=2.0, body=None):
         self.fname = fname
         self.docstring = docstring
         self.chunks = chunks
@@ -95,6 +103,7 @@ class Recipe:
         self.kind = kind
         self.build_expr = build_expr
         self.timelimit_hour = timelimit_hour
+        self.body = body
 
 
 RECIPES = [
@@ -143,6 +152,51 @@ Usage
         timelimit_hour=0.5,
     ),
     Recipe(
+        fname="plot_si_bands_1.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 2 (plotting).
+
+Plots the band structure from `task_si_nscf/`, the output of the two
+manually-chained tasks in `run_si_gstate.py` + `run_si_nscf.py`. Compare
+with `plot_si_bands_2.py`, which plots the same physics from the `Flow`
+version (`run_si_ebands.py`) instead.
+
+Usage
+-----
+    python plot_si_bands_1.py
+""",
+        extra_imports="import numpy as np\n\nimport matplotlib.pyplot as plt",
+        kind="script",
+        body='''\
+def main():
+    # Get task directory
+    dirname = SCRIPT_DIR / 'task_si_nscf'
+    gsr_path = dirname / 'outdata' / 'out_GSR.nc'
+
+    # Extract results
+    gsr = abilab.abiopen(str(gsr_path))
+    ebands = gsr.ebands
+
+    fig = ebands.plot(color='b', show=False)
+    ax = fig.gca()
+    ax.set_ylim(-12.5, 7.5)
+
+    # Make file name for figure
+    plotdir = Path('Plots')
+    plotdir.mkdir(exist_ok=True)
+    figname = plotdir / Path(__file__).name.replace(".py", ".png").replace("plot_", "")
+    print(figname)
+
+    # Save figure file
+    fig.savefig(figname, dpi=200)
+
+    # Display the figure
+    plt.show()
+
+if __name__ == "__main__":
+    main()''',
+    ),
+    Recipe(
         fname="run_si_ebands.py",
         docstring="""\
 Companion to `1-Task_to_flow.ipynb`, step 3.
@@ -166,6 +220,53 @@ Usage
         kind="run_flow",
         build_expr="build_si_ebands_task_flow(workdir)",
         timelimit_hour=0.5,
+    ),
+    Recipe(
+        fname="plot_si_bands_2.py",
+        docstring="""\
+Companion to `1-Task_to_flow.ipynb`, step 3 (plotting).
+
+Plots the band structure from `flow_si_ebands/`, the output of the `Flow`
+version of the same calculation (`run_si_ebands.py`). Compare with
+`plot_si_bands_1.py`, which plots the same physics from the two
+manually-chained tasks instead.
+
+Usage
+-----
+    python plot_si_bands_2.py
+""",
+        extra_imports="import numpy as np\n\nimport matplotlib.pyplot as plt",
+        kind="script",
+        body='''\
+def main():
+    # Get flow directory
+    dirname = SCRIPT_DIR / 'flow_si_ebands'
+    flow = flowtk.Flow.from_file(dirname)     # Open flow object.
+    task = flow[0][1]                         # Select the second task of the first work.
+    gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
+
+    # Extract results
+    gsr = abilab.abiopen(str(gsr_path))
+    ebands = gsr.ebands
+
+    fig = ebands.plot(color='b', show=False)
+    ax = fig.gca()
+    ax.set_ylim(-12.5, 7.5)
+
+    # Make file name for figure
+    plotdir = Path('Plots')
+    plotdir.mkdir(exist_ok=True)
+    figname = plotdir / Path(__file__).name.replace(".py", ".png").replace("plot_", "")
+    print(figname)
+
+    # Save figure file
+    fig.savefig(figname, dpi=200)
+
+    # Display the figure
+    plt.show()
+
+if __name__ == "__main__":
+    main()''',
     ),
     Recipe(
         fname="make_si_ebands.py",
@@ -289,6 +390,88 @@ Usage
         needs_mgo_cif=True,
     ),
     Recipe(
+        fname="run_mgo_anaddb.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons) -- the anaddb
+post-processing step.
+
+Opens `flow_mgo_phonons/w1/outdata/out_DDB`, the output of
+`make_mgo_phonons.py`, and calls `anaget_phbst_and_phdos_files` to
+Fourier-interpolate the dynamical matrix onto a dense q-mesh (for the
+phonon DOS) and along a high-symmetry q-path (for the phonon band
+structure). Results are written to `task_mgo_anaddb/` -- `plot_mgo_phonons.py`
+reads them from there.
+
+Usage
+-----
+    python run_mgo_anaddb.py
+""",
+        kind="script",
+        body='''\
+def main():
+    ddb_path = SCRIPT_DIR / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
+    workdir = SCRIPT_DIR / 'task_mgo_anaddb'
+
+    with abilab.abiopen(str(ddb_path)) as ddb:
+        phbst_file, phdos_file = ddb.anaget_phbst_and_phdos_files(
+            workdir=str(workdir),
+            nqsmall=10,
+            ndivsm=40,
+            asr=2,
+            chneut=1,
+            dipdip=1,
+            dos_method='tetra',
+            lo_to_splitting='automatic',
+            mpi_procs=1,
+            verbose=True)
+
+if __name__ == "__main__":
+    main()''',
+    ),
+    Recipe(
+        fname="plot_mgo_phonons.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons) -- plotting.
+
+Plots the phonon band structure from `task_mgo_anaddb/`, the output of
+`run_mgo_anaddb.py`. Several alternative plots (phonon DOS, projected DOS,
+colored/matched bands, harmonic thermodynamics, ...) are left commented
+out below as a starting point -- uncomment whichever you need.
+
+Usage
+-----
+    python plot_mgo_phonons.py
+""",
+        kind="script",
+        body='''\
+def main():
+    workdir = SCRIPT_DIR / 'task_mgo_anaddb'
+    out_anaddb_path = workdir / 'outdata' / 'out_anaddb.nc'
+    phbst_path = workdir / 'outdata' / 'out_PHBST.nc'
+    phdos_path = workdir / 'outdata' / 'out_PHDOS.nc'
+
+    plotdir = Path('Plots')
+    plotdir.mkdir(exist_ok=True)
+    prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '.png')
+
+    with abilab.abiopen(str(phbst_path)) as phbst_file:
+        phbands = phbst_file.phbands
+
+    with abilab.abiopen(str(phdos_path)) as phdos_file:
+        phdos = phdos_file.phdos
+        #phbands.read_non_anal_from_file(str(out_anaddb_path))
+
+    #fig = phbands.plot_with_phdos(phdos, units="mev", show=False); fig.savefig(str(prefix) + '_phbs_dos.png', dpi=200)
+    #fig = phbands.plot_colored_matched(units="mev", show=False); fig.savefig(str(prefix) + '_phbs_colored.png', dpi=200)
+    fig = phbands.plot(units="mev", color='b', show=False)
+    ax = fig.gca()
+    ax.set_ylim(0, 80)
+    fig.savefig(str(prefix) + '_phbands.png', dpi=200)
+
+if __name__ == "__main__":
+    main()''',
+    ),
+    Recipe(
         fname="make_aln_relax.py",
         docstring="""\
 Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
@@ -311,6 +494,45 @@ Usage
         chunks=["aln_relax_input", "build_aln_relax_flow", "setup_manager"],
         entry_fn="build_aln_relax_flow",
         needs_aln_cif=True,
+    ),
+    Recipe(
+        fname="save_aln_structure.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+
+Opens `flow_aln_relax/`, the output of `make_aln_relax.py`, and saves the
+relaxed AlN structure (atomic positions and cell) to a `.cif` file --
+useful if you want to reuse the relaxed geometry as the input structure of
+a later calculation (e.g. a band structure or phonon flow at the relaxed
+volume, instead of the experimental one).
+
+Usage
+-----
+    python save_aln_structure.py
+""",
+        kind="script",
+        body='''\
+def main():
+    # Get flow directory
+    workdir = SCRIPT_DIR / 'flow_aln_relax'
+    flow = flowtk.Flow.from_file(workdir)     # Open flow object.
+    task = flow[0][0]                         # Select the first task of the first work.
+    gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
+
+    # Extract results
+    gsr = abilab.abiopen(str(gsr_path))
+    structure = gsr.structure
+    print(structure)
+
+    # Make file name for the relaxed structure
+    savedir = Path('Data');  savedir.mkdir(exist_ok=True)
+    filename = savedir / 'AlN_relaxed.cif'
+
+    print(filename)
+    structure.to(filename=str(filename))
+
+if __name__ == "__main__":
+    main()''',
     ),
 ]
 
@@ -439,6 +661,9 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     main()'''
+
+    elif recipe.kind == "script":
+        footer = recipe.body.strip("\n")
 
     else:
         raise ValueError(f"Unknown recipe kind: {recipe.kind!r}")

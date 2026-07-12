@@ -267,7 +267,7 @@ def build_eos_flow(workdir="flow_gaas_eos", scale_volumes=tuple(np.arange(0.94, 
 # ---------------------------------------------------------------------------
 # 6) DFPT phonons.
 # ---------------------------------------------------------------------------
-def build_mgo_phonon_flow(workdir="flow_mgo_phonons", ecut=16, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
+def build_mgo_phonon_flow(workdir="flow_mgo_phonons", ecut=24, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2)):
     """
     PhononFlow for MgO: one GS task producing the WFK file used by DFPT,
     followed by the (symmetry-irreducible) atomic-perturbation tasks needed

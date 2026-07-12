@@ -13,12 +13,13 @@ Usage
 """
 from pathlib import Path
 
+import numpy as np
+
+import matplotlib.pyplot as plt
+
 import abipy.abilab as abilab
 import abipy.flowtk as flowtk
 from abipy.abilab import Structure
-
-import numpy as np
-import matplotlib.pyplot as plt
 
 # This script is meant to be copied -- together with the rest of this
 # Tutorial/ directory -- into your own work directory. Data/Pseudos and
@@ -28,25 +29,26 @@ DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
+
 def main():
     # Get task directory
     dirname = SCRIPT_DIR / 'task_si_nscf'
     gsr_path = dirname / 'outdata' / 'out_GSR.nc'
-    
+
     # Extract results
     gsr = abilab.abiopen(str(gsr_path))
     ebands = gsr.ebands
-    
+
     fig = ebands.plot(color='b', show=False)
     ax = fig.gca()
     ax.set_ylim(-12.5, 7.5)
-    
+
     # Make file name for figure
     plotdir = Path('Plots')
     plotdir.mkdir(exist_ok=True)
     figname = plotdir / Path(__file__).name.replace(".py", ".png").replace("plot_", "")
     print(figname)
-    
+
     # Save figure file
     fig.savefig(figname, dpi=200)
 
