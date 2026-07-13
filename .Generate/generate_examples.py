@@ -89,7 +89,8 @@ class Recipe:
     def __init__(self, fname, docstring, chunks=(), entry_fn=None,
                  extra_imports="", needs_gaas_cif=False, needs_si_cif=False,
                  needs_aln_cif=False, needs_mgo_cif=False, needs_fcc_kpath=False,
-                 kind="make_flow", build_expr=None, timelimit_hour=2.0, body=None):
+                 kind="make_flow", build_expr=None, timelimit_hour=2.0, body=None,
+                 entry_kwargs="", mpi_procs=4):
         self.fname = fname
         self.docstring = docstring
         self.chunks = chunks
@@ -104,6 +105,13 @@ class Recipe:
         self.build_expr = build_expr
         self.timelimit_hour = timelimit_hour
         self.body = body
+        # "make_flow" only: extra literal text appended inside the
+        # `entry_fn(workdir=workdir, ...)` call (e.g. ", ecut=40"), and the
+        # mpi_procs passed to setup_manager -- for scripts that need a
+        # denser/costlier flow than what the shared workshop_lib default
+        # (used elsewhere, e.g. in the notebook) is tuned for.
+        self.entry_kwargs = entry_kwargs
+        self.mpi_procs = mpi_procs
 
 
 RECIPES = [
@@ -368,6 +376,8 @@ Usage
 """,
         chunks=["gs_input", "build_kpt_conv_flow", "setup_manager"],
         entry_fn="build_kpt_conv_flow",
+        entry_kwargs=", nk_list=(2, 4, 6, 8, 10), ecut=40",
+        mpi_procs=10,
         needs_gaas_cif=True,
     ),
     Recipe(
@@ -426,8 +436,40 @@ Usage
 """,
         chunks=["_bandstructure_inputs", "build_gaas_ebands_flow", "setup_manager"],
         entry_fn="build_gaas_ebands_flow",
+        mpi_procs=10,
         needs_gaas_cif=True,
         needs_fcc_kpath=True,
+    ),
+    Recipe(
+        fname="plot_gaas_ebands.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.3 (band structure) --
+plotting.
+
+Calls `workshop_lib.plot_ebands()` on `flow_gaas_ebands/`, the output of
+`make_gaas_ebands.py`: opens the second task of the first Work (the NSCF
+run along the L-Gamma-X path), plots the band structure, and saves the
+figure to `Plots/`.
+
+Usage
+-----
+    python plot_gaas_ebands.py
+""",
+        extra_imports="import matplotlib.pyplot as plt",
+        chunks=["plot_ebands"],
+        kind="script",
+        body='''\
+def main():
+    workdir = SCRIPT_DIR / 'flow_gaas_ebands'
+    plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
+    prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
+    figname = str(prefix) + '_ebands.png'
+
+    fig = plot_ebands(workdir, figname, show=True)
+
+
+if __name__ == "__main__":
+    main()''',
     ),
     Recipe(
         fname="make_mgo_phonons.py",
@@ -655,8 +697,8 @@ def render(recipe):
                 break
         workdir = f"flow_{{name}}"
 
-    flow = {recipe.entry_fn}(workdir=workdir)
-    flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
+    flow = {recipe.entry_fn}(workdir=workdir{recipe.entry_kwargs})
+    flow = setup_manager(flow, mpi_procs={recipe.mpi_procs}, omp_threads=1)
     return flow
 
 

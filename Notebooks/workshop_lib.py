@@ -38,6 +38,7 @@ from pathlib import Path
 import subprocess
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 import abipy.abilab as abilab
 import abipy.flowtk as flowtk
@@ -243,7 +244,7 @@ def get_gsr_files(workdir):
     return gsr_files
     
 
-def plot_ecut_conv(workdir, figname):
+def plot_ecut_conv(workdir, figname, show=True):
     """
     Extract energy per atom from a convergence flow and plot against 'ecut'.
     """
@@ -261,7 +262,9 @@ def plot_ecut_conv(workdir, figname):
                                                 "E/natom (eV)", E_at_eV,
                                                 tols=1e-3)
 
-    fig = ca.plot(savefig=str(figname), show=True, dpi=200)
+    fig = ca.plot(show=show)
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
     return fig
 
@@ -302,7 +305,10 @@ def plot_kpt_conv(workdir, figname, show=True):
         "Inverse k-point distance (Ang)", k_dist_inv,
         "E/natom (eV)", E_at_eV, tols=1e-3)
 
-    fig = ca.plot(savefig=str(figname), show=show, dpi=200)
+    fig = ca.plot(show=show)
+
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
     return fig
 
@@ -311,7 +317,7 @@ def plot_kpt_conv(workdir, figname, show=True):
 # 4) Band structures.
 # ---------------------------------------------------------------------------
 def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
-                           nband_scf=16, nband_nscf=40):
+                           nband_scf=20, nband_nscf=40):
     multi = abilab.MultiDataset(structure=structure, pseudos=pseudos,
                                  pseudo_dir=str(PSEUDO_DIR), ndtset=2)
     multi.set_vars(ecut=ecut, nband=nband_scf, nbdbuf=4, paral_kgb=0, iomode=3)
@@ -319,6 +325,7 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
     # Dataset 1: GS run on a homogeneous k-mesh.
     multi[0].set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
     multi[0].set_vars(tolvrs=1e-8)
+    multi[0].set_vars(occopt=3, tsmear=0.05)
 
     # Dataset 2: NSCF run along a k-path.
     multi[1].set_kpath(ndivsm=20, kptbounds=kptbounds)
@@ -329,7 +336,7 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
 
 def build_gaas_ebands_flow(workdir="flow_gaas_ebands"):
     scf_input, nscf_input = _bandstructure_inputs(
-        gaas_structure(), ["Ga.psp8", "As.psp8"], ecut=40, ngkpt=(4, 4, 4),
+        gaas_structure(), ["Ga.psp8", "As.psp8"], ecut=40, ngkpt=(8, 8, 8),
         kptbounds=FCC_KPATH)
     return flowtk.bandstructure_flow(workdir, scf_input, nscf_input)
 
@@ -365,7 +372,7 @@ def build_eos_flow(workdir="flow_gaas_eos", scale_volumes=tuple(np.arange(0.94, 
     return flow
 
 
-def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
+def plot_ebands(workdir, figname, ylims=(-2,2), show=True):
     flow = flowtk.Flow.from_file(workdir)     # Open flow object.
     task = flow[0][1]                         # Select the second task of the first work.
     gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
@@ -374,16 +381,14 @@ def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
     gsr = abilab.abiopen(str(gsr_path))
     ebands = gsr.ebands
 
-    fig = ebands.plot(color='b', show=False)
-    ax = fig.gca()
-    ax.set_ylim(ylim)
+    # Plot band structure
+    fig = ebands.plot(color='b', ylims=ylims, show=show)
 
     # Save figure file
-    fig.savefig(str(figname), dpi=200)
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
-    # Display the figure
-    if show:
-        plt.show()
+    return fig
 
 # ---------------------------------------------------------------------------
 # 6) DFPT phonons.

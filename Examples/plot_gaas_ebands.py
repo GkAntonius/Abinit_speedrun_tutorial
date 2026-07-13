@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 """
-Companion to `1-Task_to_flow.ipynb`, step 3 (plotting).
+Companion to `2-Existing_flows.ipynb`, section 2.3 (band structure) --
+plotting.
 
-Plots the band structure from `flow_si_ebands/`, the output of the `Flow`
-version of the same calculation (`run_si_ebands.py`). Compare with
-`plot_si_bands_1.py`, which plots the same physics from the two
-manually-chained tasks instead.
+Calls `workshop_lib.plot_ebands()` on `flow_gaas_ebands/`, the output of
+`make_gaas_ebands.py`: opens the second task of the first Work (the NSCF
+run along the L-Gamma-X path), plots the band structure, and saves the
+figure to `Plots/`.
 
 Usage
 -----
-    python plot_si_bands_2.py
+    python plot_gaas_ebands.py
 """
 from pathlib import Path
-
-import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -39,22 +38,18 @@ def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
     gsr = abilab.abiopen(str(gsr_path))
     ebands = gsr.ebands
 
-    fig = ebands.plot(color='b', show=False)
+    fig = ebands.plot(color='b', show=show)
     ax = fig.gca()
     ax.set_ylim(ylim)
 
     # Save figure file
     fig.savefig(str(figname), dpi=200)
 
-    # Display the figure
-    if show:
-        plt.show()
-
     return fig
 
 
 def main():
-    workdir = SCRIPT_DIR / 'flow_gaas_ebands' 
+    workdir = SCRIPT_DIR / 'flow_gaas_ebands'
     plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
     prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
     figname = str(prefix) + '_ebands.png'
