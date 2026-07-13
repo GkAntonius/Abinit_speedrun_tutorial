@@ -42,6 +42,7 @@ import numpy as np
 import abipy.abilab as abilab
 import abipy.flowtk as flowtk
 from abipy.abilab import Structure
+from abipy.tools.plotting import ConvergenceAnalyzer
 from IPython.display import Code, display
 
 # ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ def print_source(obj):
     display(abilab.print_source(obj))
 
 
-def run_shell_command(command, silent=False):
+def shell_command(command, silent=False):
     """Run a shell command in the background, without waiting for it.
 
     If `silent` is True, also discard its stdout instead of letting it
@@ -231,7 +232,7 @@ def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 50, 5
     return flow
 
 
-def plot_ecut_conv(workdir="flow_gaas_convecut", figname):
+def plot_ecut_conv(workdir, figname):
 
     # Build the list of GSR.nc files
     gsr_files = []

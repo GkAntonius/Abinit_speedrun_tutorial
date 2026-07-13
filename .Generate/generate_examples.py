@@ -321,51 +321,28 @@ Usage
 Companion to `2-Existing_flows.ipynb`, section 2.1 (ecut convergence) --
 plotting.
 
-Opens `flow_gaas_convecut/`, the output of `make_gaas_convecut.py`, and
-fits/plots the ecut convergence with
+Calls `workshop_lib.plot_ecut_conv()` on `flow_gaas_convecut/`, the output
+of `make_gaas_convecut.py`: fits/plots the ecut convergence with
 `abipy.tools.plotting.ConvergenceAnalyzer` -- the same analysis shown
-inline in the notebook, saved here to `Plots/gaas_convecut_convecut.png`.
+inline in the notebook -- and saves the figure to `Plots/`.
 
 Usage
 -----
     python plot_gaas_convecut.py
 """,
         extra_imports="from abipy.tools.plotting import ConvergenceAnalyzer",
+        chunks=["plot_ecut_conv"],
         kind="script",
         body='''\
 def main():
-    # Get flow directory
     workdir = SCRIPT_DIR / 'flow_gaas_convecut'
-    print(workdir)
 
     # Make file name for figure
     plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
     prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
     figname = str(prefix) + '_convecut.png'
-    print(figname)
 
-    # Extract results
-    ecut_Ha = []
-    energy_per_atom_eV = []
-
-    flow = flowtk.Flow.from_file(str(workdir))
-
-    for work in flow:
-        # Select task in work
-        task = work[0]
-
-        gsr_path = task.outdir.has_abiext('GSR')
-        print(gsr_path)
-
-        gsr = abilab.abiopen(gsr_path)
-        ecut_Ha.append(gsr.ecut)
-        energy_per_atom_eV.append(gsr.energy_per_atom)
-
-    # Plot results
-    ca = ConvergenceAnalyzer.from_xy_label_vals("ecut (Ha)", ecut_Ha,
-                                                "E/natom (eV)", energy_per_atom_eV, tols=1e-3)
-
-    fig = ca.plot(savefig=str(figname), show=True, dpi=200)
+    plot_ecut_conv(workdir=str(workdir), figname=figname)
 
 if __name__ == "__main__":
     main()''',
