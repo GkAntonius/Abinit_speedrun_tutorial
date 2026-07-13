@@ -232,20 +232,24 @@ def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 50, 5
     return flow
 
 
-def plot_ecut_conv(workdir, figname):
-
-    # Build the list of GSR.nc files
+def get_gsr_files(workdir):
+    """Build the list of GSR.nc files from the last task of each work"""
     gsr_files = []
     flow = flowtk.Flow.from_file(str(workdir))
     for work in flow:
-        task = work[0]  # Select first task in work
+        task = work[-1]  # Select last task in work
         gsr_path = task.outdir.has_abiext('GSR')
         gsr_files.append(str(gsr_path))
+    return gsr_files
     
-    # Extract data
-    ecut_Ha = []
-    energy_per_atom_eV = []
 
+def plot_ecut_conv(workdir, figname):
+    """
+    Extract energy per atom from a convergence flow and plot against 'ecut'.
+    """
+    gsr_files = get_gsr_files(workdir)
+
+    ecut_Ha, E_at_eV = [], []
     for gsr_file in gsr_files:
 
         gsr = abilab.abiopen(gsr_file)
@@ -254,7 +258,8 @@ def plot_ecut_conv(workdir, figname):
 
     # Plot results
     ca = ConvergenceAnalyzer.from_xy_label_vals("ecut (Ha)", ecut_Ha,
-                                                "E/natom (eV)", energy_per_atom_eV, tols=1e-3)
+                                                "E/natom (eV)", E_at_eV,
+                                                tols=1e-3)
 
     fig = ca.plot(savefig=str(figname), show=True, dpi=200)
 
@@ -263,14 +268,43 @@ def plot_ecut_conv(workdir, figname):
 # ---------------------------------------------------------------------------
 # 3) k-point convergence.
 # ---------------------------------------------------------------------------
-def build_kpt_conv_flow(workdir="flow_gaas_convkpt", nk_list=(1, 2, 4, 6, 8, 10)):
+def build_kpt_conv_flow(workdir="flow_gaas_convkpt", nk_list=(1, 2, 4, 6, 8, 10), ecut=12):
     """Flow with one SCF task per (automatically-generated) k-mesh density."""
     flow = flowtk.Flow(workdir=workdir)
     for nk in nk_list:
-        inp = gs_input(ecut=12)
+        inp = gs_input(ecut=ecut)
         inp.set_autokmesh(nk)
         flow.register_scf_task(inp)
     return flow
+
+
+def plot_kpt_conv(workdir, figname, show=True):
+    """
+    Extract energy and k-point grids, and plot against inverse k-points distance.
+    """
+    k_dist_inv, E_at_eV = [], []
+
+    for gsr_file in get_gsr_files(workdir):
+
+            gsr = abilab.abiopen(gsr_file)
+
+            E_at_eV.append(gsr.energy_per_atom)
+
+            # Compute inverse k-points distance
+            rprim = gsr.structure.lattice.matrix
+            kptrlatt = gsr.kpoints.ksampling["kptrlatt"]
+            R_latt = np.dot(kptrlatt, rprim)
+            k_latt = 2 * np.pi * np.linalg.inv(R_latt)
+            kmin = max(np.linalg.norm(k) for k in k_latt)
+            k_dist_inv.append(1 / kmin)
+
+    ca = ConvergenceAnalyzer.from_xy_label_vals(
+        "Inverse k-point distance (Ang)", k_dist_inv,
+        "E/natom (eV)", E_at_eV, tols=1e-3)
+
+    fig = ca.plot(savefig=str(figname), show=show, dpi=200)
+
+    return fig
 
 
 # ---------------------------------------------------------------------------

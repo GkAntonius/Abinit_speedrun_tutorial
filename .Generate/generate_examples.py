@@ -369,6 +369,40 @@ Usage
         needs_gaas_cif=True,
     ),
     Recipe(
+        fname="plot_gaas_convkpt.py",
+        docstring="""\
+Companion to `2-Existing_flows.ipynb`, section 2.1 (k-point convergence) --
+plotting.
+
+Calls `workshop_lib.plot_kpt_conv()` on `flow_gaas_convkpt/`, the output
+of `make_gaas_convkpt.py`: converts each k-mesh into an "inverse k-point
+distance" (a rough, mesh-independent measure of density) and fits/plots
+the convergence with `abipy.tools.plotting.ConvergenceAnalyzer` -- the
+same analysis shown inline in the notebook -- saving the figure to
+`Plots/`.
+
+Usage
+-----
+    python plot_gaas_convkpt.py
+""",
+        extra_imports="import numpy as np\n\nfrom abipy.tools.plotting import ConvergenceAnalyzer",
+        chunks=["plot_kpt_conv"],
+        kind="script",
+        body='''\
+def main():
+    workdir = SCRIPT_DIR / 'flow_gaas_convkpt'
+
+    # Make file name for figure
+    plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
+    prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
+    figname = str(prefix) + '_convkpt.png'
+
+    plot_kpt_conv(workdir=str(workdir), figname=figname)
+
+if __name__ == "__main__":
+    main()''',
+    ),
+    Recipe(
         fname="make_gaas_ebands.py",
         docstring="""\
 Companion to `2-Existing_flows.ipynb`, section 2.3 (band structure).

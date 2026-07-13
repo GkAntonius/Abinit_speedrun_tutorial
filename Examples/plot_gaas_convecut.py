@@ -29,7 +29,7 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 
-def plot_ecut_conv(workdir, figname="ecut_conv.png"):
+def plot_ecut_conv(workdir, figname):
 
     # Build the list of GSR.nc files
     gsr_files = []
