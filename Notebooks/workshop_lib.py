@@ -231,6 +231,34 @@ def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 50, 5
     return flow
 
 
+def plot_ecut_conv(workdir="flow_gaas_convecut", figname):
+
+    # Build the list of GSR.nc files
+    gsr_files = []
+    flow = flowtk.Flow.from_file(str(workdir))
+    for work in flow:
+        task = work[0]  # Select first task in work
+        gsr_path = task.outdir.has_abiext('GSR')
+        gsr_files.append(str(gsr_path))
+    
+    # Extract data
+    ecut_Ha = []
+    energy_per_atom_eV = []
+
+    for gsr_file in gsr_files:
+
+        gsr = abilab.abiopen(gsr_file)
+        ecut_Ha.append(gsr.ecut)
+        energy_per_atom_eV.append(gsr.energy_per_atom)
+
+    # Plot results
+    ca = ConvergenceAnalyzer.from_xy_label_vals("ecut (Ha)", ecut_Ha,
+                                                "E/natom (eV)", energy_per_atom_eV, tols=1e-3)
+
+    fig = ca.plot(savefig=str(figname), show=True, dpi=200)
+
+    return fig
+
 # ---------------------------------------------------------------------------
 # 3) k-point convergence.
 # ---------------------------------------------------------------------------

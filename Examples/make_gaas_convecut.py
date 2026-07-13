@@ -42,7 +42,7 @@ def gs_input(ecut=6, ngkpt=(8, 8, 8)):
     return inp
 
 
-def build_ecut_conv_flow(workdir, ecut_list=range(10, 40, 5)):
+def build_ecut_conv_flow(workdir, ecut_list=range(10, 50, 5)):
     """Flow with one SCF task per value of ecut."""
     flow = flowtk.Flow(workdir=workdir)
     for ecut in ecut_list:
