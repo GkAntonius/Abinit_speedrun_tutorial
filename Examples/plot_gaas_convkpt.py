@@ -8,7 +8,8 @@ of `make_gaas_convkpt.py`: converts each k-mesh into an "inverse k-point
 distance" (a rough, mesh-independent measure of density) and fits/plots
 the convergence with `abipy.tools.plotting.ConvergenceAnalyzer` -- the
 same analysis shown inline in the notebook -- saving the figure to
-`Plots/`.
+`Plots/`. `get_gsr_files()` (shared with `plot_gaas_convecut.py`) collects
+the `GSR.nc` path of the last task of each Work in the flow.
 
 Usage
 -----
@@ -33,28 +34,42 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 
-def plot_kpt_conv(workdir, figname="kpt_conv.png"):
+def get_gsr_files(workdir):
+    """Build the list of GSR.nc files from the last task of each work"""
+    gsr_files = []
+    flow = flowtk.Flow.from_file(str(workdir))
+    for work in flow:
+        task = work[-1]  # Select last task in work
+        gsr_path = task.outdir.has_abiext('GSR')
+        gsr_files.append(str(gsr_path))
+    return gsr_files
 
-    # Convert each k-mesh into an "inverse k-point distance" (a rough,
-    # mesh-independent measure of density) so runs with different
-    # kptrlatt can be compared on the same x-axis.
-    k_recip_dist, ene_per_atom_eV = [], []
 
-    with abilab.GsrRobot.from_dir(str(workdir)) as robot:
-        for label, gsr in robot:
-            ene_per_atom_eV.append(gsr.energy_per_atom)
+def plot_kpt_conv(workdir, figname, show=True):
+    """
+    Extract energy and k-point grids, and plot against inverse k-points distance.
+    """
+    k_dist_inv, E_at_eV = [], []
+
+    for gsr_file in get_gsr_files(workdir):
+
+            gsr = abilab.abiopen(gsr_file)
+
+            E_at_eV.append(gsr.energy_per_atom)
+
+            # Compute inverse k-points distance
             rprim = gsr.structure.lattice.matrix
             kptrlatt = gsr.kpoints.ksampling["kptrlatt"]
             R_latt = np.dot(kptrlatt, rprim)
             k_latt = 2 * np.pi * np.linalg.inv(R_latt)
             kmin = max(np.linalg.norm(k) for k in k_latt)
-            k_recip_dist.append(1 / kmin)
+            k_dist_inv.append(1 / kmin)
 
     ca = ConvergenceAnalyzer.from_xy_label_vals(
-        "Inverse k-point distance (Ang)", k_recip_dist,
-        "E/natom (eV)", ene_per_atom_eV, tols=1e-3)
+        "Inverse k-point distance (Ang)", k_dist_inv,
+        "E/natom (eV)", E_at_eV, tols=1e-3)
 
-    fig = ca.plot(savefig=str(figname), show=True, dpi=200)
+    fig = ca.plot(savefig=str(figname), show=show, dpi=200)
 
     return fig
 
@@ -64,8 +79,7 @@ def main():
 
     # Make file name for figure
     plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
-    prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
-    figname = str(prefix) + '_convkpt.png'
+    figname = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '.png')
 
     plot_kpt_conv(workdir=str(workdir), figname=figname)
 

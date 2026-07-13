@@ -324,14 +324,16 @@ plotting.
 Calls `workshop_lib.plot_ecut_conv()` on `flow_gaas_convecut/`, the output
 of `make_gaas_convecut.py`: fits/plots the ecut convergence with
 `abipy.tools.plotting.ConvergenceAnalyzer` -- the same analysis shown
-inline in the notebook -- and saves the figure to `Plots/`.
+inline in the notebook -- and saves the figure to `Plots/`. `get_gsr_files()`
+(shared with `plot_gaas_convkpt.py`) collects the `GSR.nc` path of the
+last task of each Work in the flow.
 
 Usage
 -----
     python plot_gaas_convecut.py
 """,
         extra_imports="from abipy.tools.plotting import ConvergenceAnalyzer",
-        chunks=["plot_ecut_conv"],
+        chunks=["get_gsr_files", "plot_ecut_conv"],
         kind="script",
         body='''\
 def main():
@@ -379,14 +381,15 @@ of `make_gaas_convkpt.py`: converts each k-mesh into an "inverse k-point
 distance" (a rough, mesh-independent measure of density) and fits/plots
 the convergence with `abipy.tools.plotting.ConvergenceAnalyzer` -- the
 same analysis shown inline in the notebook -- saving the figure to
-`Plots/`.
+`Plots/`. `get_gsr_files()` (shared with `plot_gaas_convecut.py`) collects
+the `GSR.nc` path of the last task of each Work in the flow.
 
 Usage
 -----
     python plot_gaas_convkpt.py
 """,
         extra_imports="import numpy as np\n\nfrom abipy.tools.plotting import ConvergenceAnalyzer",
-        chunks=["plot_kpt_conv"],
+        chunks=["get_gsr_files", "plot_kpt_conv"],
         kind="script",
         body='''\
 def main():
@@ -394,8 +397,7 @@ def main():
 
     # Make file name for figure
     plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
-    prefix = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '')
-    figname = str(prefix) + '_convkpt.png'
+    figname = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '.png')
 
     plot_kpt_conv(workdir=str(workdir), figname=figname)
 

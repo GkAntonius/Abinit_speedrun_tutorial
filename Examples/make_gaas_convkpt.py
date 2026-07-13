@@ -42,11 +42,11 @@ def gs_input(ecut=6, ngkpt=(8, 8, 8)):
     return inp
 
 
-def build_kpt_conv_flow(workdir, nk_list=(1, 2, 4, 6, 8, 10)):
+def build_kpt_conv_flow(workdir, nk_list=(1, 2, 4, 6, 8, 10), ecut=12):
     """Flow with one SCF task per (automatically-generated) k-mesh density."""
     flow = flowtk.Flow(workdir=workdir)
     for nk in nk_list:
-        inp = gs_input(ecut=12)
+        inp = gs_input(ecut=ecut)
         inp.set_autokmesh(nk)
         flow.register_scf_task(inp)
     return flow
@@ -71,8 +71,8 @@ def build_flow(workdir=None):
                 break
         workdir = f"flow_{name}"
 
-    flow = build_kpt_conv_flow(workdir=workdir)
-    flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
+    flow = build_kpt_conv_flow(workdir=workdir, nk_list=(2, 4, 6, 8, 10), ecut=40)
+    flow = setup_manager(flow, mpi_procs=10, omp_threads=1)
     return flow
 
 

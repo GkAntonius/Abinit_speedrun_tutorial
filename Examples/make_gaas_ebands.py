@@ -35,7 +35,7 @@ FCC_KPATH = [[0.5, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.5, 0.5]]
 
 
 def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
-                           nband_scf=16, nband_nscf=40):
+                           nband_scf=20, nband_nscf=40):
     multi = abilab.MultiDataset(structure=structure, pseudos=pseudos,
                                  pseudo_dir=str(PSEUDO_DIR), ndtset=2)
     multi.set_vars(ecut=ecut, nband=nband_scf, nbdbuf=4, paral_kgb=0, iomode=3)
@@ -43,9 +43,10 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
     # Dataset 1: GS run on a homogeneous k-mesh.
     multi[0].set_kmesh(ngkpt=ngkpt, shiftk=[0, 0, 0])
     multi[0].set_vars(tolvrs=1e-8)
+    multi[0].set_vars(occopt=3, tsmear=0.05)
 
     # Dataset 2: NSCF run along a k-path.
-    multi[1].set_kpath(ndivsm=10, kptbounds=kptbounds)
+    multi[1].set_kpath(ndivsm=20, kptbounds=kptbounds)
     multi[1].set_vars(nband=nband_nscf, tolwfr=1e-12)
 
     return multi.split_datasets()
@@ -53,7 +54,7 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
 
 def build_gaas_ebands_flow(workdir):
     scf_input, nscf_input = _bandstructure_inputs(
-        Structure.from_file(str(GAAS_CIF)), ["Ga.psp8", "As.psp8"], ecut=40, ngkpt=(4, 4, 4),
+        Structure.from_file(str(GAAS_CIF)), ["Ga.psp8", "As.psp8"], ecut=40, ngkpt=(8, 8, 8),
         kptbounds=FCC_KPATH)
     return flowtk.bandstructure_flow(workdir, scf_input, nscf_input)
 
@@ -78,7 +79,7 @@ def build_flow(workdir=None):
         workdir = f"flow_{name}"
 
     flow = build_gaas_ebands_flow(workdir=workdir)
-    flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
+    flow = setup_manager(flow, mpi_procs=10, omp_threads=1)
     return flow
 
 

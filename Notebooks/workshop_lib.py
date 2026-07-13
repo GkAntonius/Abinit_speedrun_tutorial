@@ -254,7 +254,7 @@ def plot_ecut_conv(workdir, figname):
 
         gsr = abilab.abiopen(gsr_file)
         ecut_Ha.append(gsr.ecut)
-        energy_per_atom_eV.append(gsr.energy_per_atom)
+        E_at_eV.append(gsr.energy_per_atom)
 
     # Plot results
     ca = ConvergenceAnalyzer.from_xy_label_vals("ecut (Ha)", ecut_Ha,
@@ -321,7 +321,7 @@ def _bandstructure_inputs(structure, pseudos, ecut, ngkpt, kptbounds,
     multi[0].set_vars(tolvrs=1e-8)
 
     # Dataset 2: NSCF run along a k-path.
-    multi[1].set_kpath(ndivsm=10, kptbounds=kptbounds)
+    multi[1].set_kpath(ndivsm=20, kptbounds=kptbounds)
     multi[1].set_vars(nband=nband_nscf, tolwfr=1e-12)
 
     return multi.split_datasets()
@@ -364,6 +364,26 @@ def build_eos_flow(workdir="flow_gaas_eos", scale_volumes=tuple(np.arange(0.94, 
 
     return flow
 
+
+def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
+    flow = flowtk.Flow.from_file(workdir)     # Open flow object.
+    task = flow[0][1]                         # Select the second task of the first work.
+    gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
+
+    # Extract results
+    gsr = abilab.abiopen(str(gsr_path))
+    ebands = gsr.ebands
+
+    fig = ebands.plot(color='b', show=False)
+    ax = fig.gca()
+    ax.set_ylim(ylim)
+
+    # Save figure file
+    fig.savefig(str(figname), dpi=200)
+
+    # Display the figure
+    if show:
+        plt.show()
 
 # ---------------------------------------------------------------------------
 # 6) DFPT phonons.

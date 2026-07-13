@@ -6,7 +6,9 @@ plotting.
 Calls `workshop_lib.plot_ecut_conv()` on `flow_gaas_convecut/`, the output
 of `make_gaas_convecut.py`: fits/plots the ecut convergence with
 `abipy.tools.plotting.ConvergenceAnalyzer` -- the same analysis shown
-inline in the notebook -- and saves the figure to `Plots/`.
+inline in the notebook -- and saves the figure to `Plots/`. `get_gsr_files()`
+(shared with `plot_gaas_convkpt.py`) collects the `GSR.nc` path of the
+last task of each Work in the flow.
 
 Usage
 -----
@@ -29,29 +31,34 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 
-def plot_ecut_conv(workdir, figname):
-
-    # Build the list of GSR.nc files
+def get_gsr_files(workdir):
+    """Build the list of GSR.nc files from the last task of each work"""
     gsr_files = []
     flow = flowtk.Flow.from_file(str(workdir))
     for work in flow:
-        task = work[0]  # Select first task in work
+        task = work[-1]  # Select last task in work
         gsr_path = task.outdir.has_abiext('GSR')
         gsr_files.append(str(gsr_path))
-    
-    # Extract data
-    ecut_Ha = []
-    energy_per_atom_eV = []
+    return gsr_files
 
+
+def plot_ecut_conv(workdir, figname):
+    """
+    Extract energy per atom from a convergence flow and plot against 'ecut'.
+    """
+    gsr_files = get_gsr_files(workdir)
+
+    ecut_Ha, E_at_eV = [], []
     for gsr_file in gsr_files:
 
         gsr = abilab.abiopen(gsr_file)
         ecut_Ha.append(gsr.ecut)
-        energy_per_atom_eV.append(gsr.energy_per_atom)
+        E_at_eV.append(gsr.energy_per_atom)
 
     # Plot results
     ca = ConvergenceAnalyzer.from_xy_label_vals("ecut (Ha)", ecut_Ha,
-                                                "E/natom (eV)", energy_per_atom_eV, tols=1e-3)
+                                                "E/natom (eV)", E_at_eV,
+                                                tols=1e-3)
 
     fig = ca.plot(savefig=str(figname), show=True, dpi=200)
 
