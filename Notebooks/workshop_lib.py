@@ -33,13 +33,51 @@ Tutorial/Data/ directory containing:
 Both are distributed with this tutorial -- see Tutorial/Data/.
 """
 
+import inspect
 from pathlib import Path
+import subprocess
 
 import numpy as np
 
 import abipy.abilab as abilab
 import abipy.flowtk as flowtk
 from abipy.abilab import Structure
+from IPython.display import Code, display
+
+# ---------------------------------------------------------------------------
+# Notebook helper: syntax-highlighted source, without depending on
+# abipy.abilab.print_source (which is really just this, hardcoded to
+# pygments+HTML instead of IPython's own Code display class).
+# ---------------------------------------------------------------------------
+#def print_source(obj):
+#    """Display the source of a function/class as syntax-highlighted code."""
+#    display(Code(inspect.getsource(obj), language="python"))
+
+def print_source(obj):
+    """Let us make use of abilab wrapper (looks much better than IPython)."""
+    display(abilab.print_source(obj))
+
+
+def run_shell_command(command, silent=False):
+    """Run a shell command in the background, without waiting for it.
+
+    If `silent` is True, also discard its stdout instead of letting it
+    inherit the notebook kernel's own (where it would otherwise show up).
+    """
+    kwargs = {
+        # stderr is always discarded: programs that probe the terminal
+        # (e.g. `stty`, called internally by abirun.py) print a harmless
+        # "stdin isn't a terminal" complaint there whenever stdin isn't a
+        # real tty -- which it never is here, since the notebook kernel's
+        # own stdin isn't one either. This is environment noise, not a real
+        # error; check `abirun.py FLOWDIR status` or the flow's own logs if
+        # something actually goes wrong.
+        "stderr": subprocess.DEVNULL,
+    }
+    if silent:
+        kwargs["stdout"] = subprocess.DEVNULL
+    subprocess.Popen(command.split(), **kwargs)
+
 
 # ---------------------------------------------------------------------------
 # Paths. Data/ is a sibling of the Notebooks/ folder this file lives in
@@ -185,7 +223,7 @@ def build_gs_flow(workdir="flow_gaas_gstate"):
 # ---------------------------------------------------------------------------
 # 2) ecut convergence.
 # ---------------------------------------------------------------------------
-def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 40, 5)):
+def build_ecut_conv_flow(workdir="flow_gaas_convecut", ecut_list=range(10, 50, 5)):
     """Flow with one SCF task per value of ecut."""
     flow = flowtk.Flow(workdir=workdir)
     for ecut in ecut_list:
