@@ -1,0 +1,56 @@
+#policy:
+#    autoparal: 1
+#    max_ncpus: 2
+
+hardware: &hardware
+   num_nodes: 670
+   sockets_per_node: 1
+   cores_per_socket: 96
+   mem_per_node: 750 Gb
+
+job: &job
+   mpi_runner: srun
+   shell_runner: None
+   modules:
+       - CCconfig     
+       - gentoo/2023
+       - gcccore/.12.3
+       - gcc/12.3
+       - hwloc/2.9.1
+       - ucx/1.14.1
+       - libfabric/1.18.0 
+       - pmix/4.2.4
+       - ucc/1.2.0
+       - openmpi/4.1.5
+       - flexiblas/3.3.1
+       - aocl-blas/5.1
+       - aocl-lapack/5.1
+       - StdEnv/2023
+       - mii/1.1.2
+       - abinit/10.5.4
+       - mpi4py/4.0.3
+       - hdf5/1.14.2
+       - netcdf/4.9.2
+       - netcdf-fortran/4.6.1
+
+   shell_env:
+        LD_LIBRARY_PATH: $LD_LIBRARY_PATH
+        ABI_PSPDIR: "/home/antonius/Data/Pseudos/pseudodojo-nc-sr-pbe-psp8/"
+
+   pre_run: ["source ~/.venv/bin/activate"]
+
+qadapters:
+  - priority: 1
+    queue:
+       qname:
+       qtype: slurm
+       qparams:
+          {account : 'rrg-antonius'}
+    limits:
+       timelimit: 0:30:0
+       min_cores: 1
+       max_cores: 192
+       min_mem_per_proc: 3800
+       max_num_launches: 24
+    hardware: *hardware
+    job: *job
