@@ -2,11 +2,10 @@
 
 ## About the tutorial
 
-Let us speedrun through running Abinit workflows and inspecting the tasks along the way.
-It is intended for new Abinit users AND expercied users wanting to master automation with Abipy.
+Let us speedrun through Density Functional Theory (DFT) calculations by making workflows and inspecting the tasks along the way.
+This tutorial is intended for new Abinit users AND experienced users wanting to master automation with Abipy.
 
-**Wiew it on github**
-LINK_TO_BE_INSERTED
+[**Wiew it on github**](https://github.com/GkAntonius/Abinit_speedrun_tutorial)
 
 **Other tutorials and documentation:**
 
