@@ -42,7 +42,7 @@ def get_gsr_files(workdir):
     return gsr_files
 
 
-def plot_ecut_conv(workdir, figname):
+def plot_ecut_conv(workdir, figname, show=True):
     """
     Extract energy per atom from a convergence flow and plot against 'ecut'.
     """
@@ -60,7 +60,9 @@ def plot_ecut_conv(workdir, figname):
                                                 "E/natom (eV)", E_at_eV,
                                                 tols=1e-3)
 
-    fig = ca.plot(savefig=str(figname), show=True, dpi=200)
+    fig = ca.plot(show=show)
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
     return fig
 

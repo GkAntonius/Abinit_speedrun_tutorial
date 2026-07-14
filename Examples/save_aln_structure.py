@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+Companion to `3-Relaxation.ipynb`.
 
 Opens `flow_aln_relax/`, the output of `make_aln_relax.py`, and saves the
 relaxed AlN structure (atomic positions and cell) to a `.cif` file --

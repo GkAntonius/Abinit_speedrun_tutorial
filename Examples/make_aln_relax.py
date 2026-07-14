@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+Companion to `3-Relaxation.ipynb`.
 
 Builds the same flow as `workshop_lib.build_aln_relax_flow()`: a single
 relaxation task for AlN, with `ionmov=2` (Broyden atomic relaxation) and

@@ -29,7 +29,7 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 
 
-def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
+def plot_ebands(workdir, figname, ylims=(-2,2), show=True):
     flow = flowtk.Flow.from_file(workdir)     # Open flow object.
     task = flow[0][1]                         # Select the second task of the first work.
     gsr_path = task.outdir.has_abiext('GSR')  # Retrieve output GSR file of this task.
@@ -38,12 +38,12 @@ def plot_ebands(workdir, figname, ylim=(-2,2), show=True):
     gsr = abilab.abiopen(str(gsr_path))
     ebands = gsr.ebands
 
-    fig = ebands.plot(color='b', show=show)
-    ax = fig.gca()
-    ax.set_ylim(ylim)
+    # Plot band structure
+    fig = ebands.plot(color='b', ylims=ylims, show=show)
 
     # Save figure file
-    fig.savefig(str(figname), dpi=200)
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
     return fig
 

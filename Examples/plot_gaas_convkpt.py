@@ -69,7 +69,10 @@ def plot_kpt_conv(workdir, figname, show=True):
         "Inverse k-point distance (Ang)", k_dist_inv,
         "E/natom (eV)", E_at_eV, tols=1e-3)
 
-    fig = ca.plot(savefig=str(figname), show=show, dpi=200)
+    fig = ca.plot(show=show)
+
+    if figname:
+        fig.savefig(str(figname), dpi=200)
 
     return fig
 

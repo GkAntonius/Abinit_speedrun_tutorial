@@ -584,7 +584,7 @@ if __name__ == "__main__":
     Recipe(
         fname="make_aln_relax.py",
         docstring="""\
-Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+Companion to `3-Relaxation.ipynb`.
 
 Builds the same flow as `workshop_lib.build_aln_relax_flow()`: a single
 relaxation task for AlN, with `ionmov=2` (Broyden atomic relaxation) and
@@ -606,9 +606,38 @@ Usage
         needs_aln_cif=True,
     ),
     Recipe(
+        fname="plot_aln_relax.py",
+        docstring="""\
+Companion to `3-Relaxation.ipynb` -- plotting.
+
+Calls `workshop_lib.plot_relax()` on `flow_aln_relax/`, the output of
+`make_aln_relax.py`: opens the last task of the first Work (the relaxation
+task), plots the relaxation trajectory (`HistFile.plot()`: lattice
+parameters, angles, volume, pressure, forces and energy vs. step), and
+saves the figure to `Plots/`.
+
+Usage
+-----
+    python plot_aln_relax.py
+""",
+        chunks=["plot_relax"],
+        kind="script",
+        body='''\
+def main():
+    workdir = SCRIPT_DIR / 'flow_aln_relax'
+    plotdir = Path('Plots'); plotdir.mkdir(exist_ok=True)
+    figname = plotdir / Path(__file__).name.replace('plot_', '').replace('.py', '.png')
+
+    fig = plot_relax(workdir, figname, show=True)
+
+
+if __name__ == "__main__":
+    main()''',
+    ),
+    Recipe(
         fname="save_aln_structure.py",
         docstring="""\
-Companion to `2-Existing_flows.ipynb`, section 2.2 (relaxation).
+Companion to `3-Relaxation.ipynb`.
 
 Opens `flow_aln_relax/`, the output of `make_aln_relax.py`, and saves the
 relaxed AlN structure (atomic positions and cell) to a `.cif` file --

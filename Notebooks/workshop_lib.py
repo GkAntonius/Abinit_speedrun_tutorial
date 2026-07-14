@@ -444,6 +444,24 @@ def build_aln_relax_flow(workdir="flow_aln_relax"):
     return flow
 
 
+def plot_relax(workdir, figname, show=True):
+    """Plot max forces through relaxation steps."""
+    flow = flowtk.Flow.from_file(workdir)
+    task = flow[0][-1]  # Select the second task of the first work.
+    hist_path = task.outdir.has_abiext('HIST')  # Retrieve output GSR file of this task.
+
+    # Open history file
+    hist = abilab.abiopen(str(hist_path))
+
+    # Plot forces vs steps
+    fig = hist.plot()
+
+    # Save figure
+    if figname:
+        fig.savefig(str(figname), dpi=200)
+
+    return fig
+
 # ---------------------------------------------------------------------------
 # Generic scheduler/manager helper reused by every flow builder above.
 # ---------------------------------------------------------------------------
