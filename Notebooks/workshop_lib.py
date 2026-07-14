@@ -408,6 +408,31 @@ def build_mgo_phonon_flow(workdir="flow_mgo_phonons", ecut=24, ngkpt=(4, 4, 4), 
     return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=False)
 
 
+def get_anaddb_input(structure, ngqpt=(2,2,2), ndivsm=40):
+
+    inp = abilab.AnaddbInput.phbands_and_dos(
+        structure,
+        ngqpt=ngqpt,
+        ndivsm=ndivsm,
+        line_density=None,
+        nqsmall=10,
+        qppa=None,
+        q1shft=(0, 0, 0),
+        qptbounds=None,
+        asr=2,
+        chneut=1,
+        dipdip=1,
+        dipquad=0,
+        quadquad=0,
+        dos_method="tetra",
+        lo_to_splitting="automatic",
+        with_ifc=False,
+        anaddb_kwargs={},
+        spell_check=False)
+
+    return inp
+
+
 # ---------------------------------------------------------------------------
 # 7) Structural relaxation.
 #    Relaxes both the atomic positions and the cell volume of AlN, driven by

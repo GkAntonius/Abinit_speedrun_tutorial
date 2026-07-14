@@ -27,24 +27,65 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "Data"
 PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
+MGO_CIF = STRUCTURE_DIR / 'mp-1265_MgO.cif'
+
+def get_anaddb_input(structure, ngqpt=(2,2,2), ndivsm=40):
+
+    inp = abilab.AnaddbInput.phbands_and_dos(
+        structure,
+        ngqpt=ngqpt,
+        ndivsm=ndivsm,
+        line_density=None,
+        nqsmall=10,
+        qppa=None,
+        q1shft=(0, 0, 0),
+        qptbounds=None,
+        asr=2,
+        chneut=1,
+        dipdip=1,
+        dipquad=0,
+        quadquad=0,
+        dos_method="tetra",
+        lo_to_splitting="automatic",
+        with_ifc=False,
+        anaddb_kwargs={},
+        spell_check=False)
+
+    return inp
+
+
+def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+    """Same as setup_manager(), for a standalone Task instead of a Flow."""
+    manager = abilab.TaskManager.from_user_config()
+    manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
+    manager.qadapter.set_timelimit(3600 * timelimit_hour)
+    task.set_manager(manager)
+    return task
 
 
 def main():
-    ddb_path = SCRIPT_DIR / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
-    workdir = SCRIPT_DIR / 'task_mgo_anaddb'
+    workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
+    ddb_path = Path(__file__).parent / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
 
-    with abilab.abiopen(str(ddb_path)) as ddb:
-        phbst_file, phdos_file = ddb.anaget_phbst_and_phdos_files(
-            workdir=str(workdir),
-            nqsmall=10,
-            ndivsm=40,
-            asr=2,
-            chneut=1,
-            dipdip=1,
-            dos_method='tetra',
-            lo_to_splitting='automatic',
-            mpi_procs=1,
-            verbose=True)
+    # Open structure file
+    structure = Structure.from_file(str(MGO_CIF))
+
+    # Make Anaddb task
+    inp = get_anaddb_input(structure)
+    task = flowtk.AnaddbTask(inp, workdir=workdir, ddb_node=str(ddb_path))
+    task = setup_task_manager(task, mpi_procs=1)
+
+    # Remove a previous run, if it exists.
+    if Path(workdir).exists():
+        print(f'Removing existing directory: {workdir}/')
+        task.rmtree()
+
+    # Write files and run the task
+    task.build()
+    task.make_links()
+    task.start_and_wait()
+    print(task.check_status())
+
 
 if __name__ == "__main__":
     main()

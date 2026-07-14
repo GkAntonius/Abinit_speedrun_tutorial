@@ -52,7 +52,7 @@ def build_mgo_phonon_flow(workdir, ecut=24, ngkpt=(4, 4, 4), ph_ngqpt=(2, 2, 2))
     return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=False)
 
 
-def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
+def setup_manager(flow, mpi_procs=8, omp_threads=1, timelimit_hour=2.0):
     manager = flow.manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
     manager.qadapter.set_timelimit(3600 * timelimit_hour)
     for work in flow:
