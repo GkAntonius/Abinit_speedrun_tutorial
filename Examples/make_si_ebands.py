@@ -113,7 +113,7 @@ def build_flow(workdir=None):
                 break
         workdir = f"flow_{name}"
 
-    flow = None(workdir=workdir)
+    flow = build_si_ebands_task_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
     return flow
 

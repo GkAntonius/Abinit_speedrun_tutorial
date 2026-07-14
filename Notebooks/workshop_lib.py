@@ -408,12 +408,13 @@ def build_mgo_phonon_flow(workdir="flow_mgo_phonons", ecut=24, ngkpt=(4, 4, 4), 
     return flowtk.PhononFlow.from_scf_input(workdir, inp, ph_ngqpt=ph_ngqpt, with_becs=False)
 
 
-def get_anaddb_input(structure, ngqpt=(2,2,2), ndivsm=40):
+def get_anaddb_input():
 
+    structure = mgo_structure()
     inp = abilab.AnaddbInput.phbands_and_dos(
         structure,
-        ngqpt=ngqpt,
-        ndivsm=ndivsm,
+        ngqpt=[2,2,2],
+        ndivsm=40,
         line_density=None,
         nqsmall=10,
         qppa=None,

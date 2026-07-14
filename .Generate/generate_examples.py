@@ -296,11 +296,9 @@ Usage
 """,
         chunks=["si_gs_input", "build_si_gs_task", "si_bandstructure_input",
                 "build_si_nscf_task", "build_si_ebands_task_flow", "setup_manager"],
+        entry_fn="build_si_ebands_task_flow",
         needs_si_cif=True,
         needs_fcc_kpath=True,
-        kind="make_flow",
-        build_expr="build_si_ebands_task_flow(workdir)",
-        timelimit_hour=0.5,
     ),
     Recipe(
         fname="make_gaas_convecut.py",
@@ -505,35 +503,42 @@ Usage
 Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons) -- the anaddb
 post-processing step.
 
-Opens `flow_mgo_phonons/w1/outdata/out_DDB`, the output of
-`make_mgo_phonons.py`, and calls `anaget_phbst_and_phdos_files` to
-Fourier-interpolate the dynamical matrix onto a dense q-mesh (for the
-phonon DOS) and along a high-symmetry q-path (for the phonon band
-structure). Results are written to `task_mgo_anaddb/` -- `plot_mgo_phonons.py`
-reads them from there.
+Builds an `AnaddbInput` (`workshop_lib.get_anaddb_input()`) that
+Fourier-interpolates the dynamical matrix from
+`flow_mgo_phonons/w1/outdata/out_DDB` (the output of `make_mgo_phonons.py`)
+onto a dense q-mesh (for the phonon DOS) and along a high-symmetry q-path
+(for the phonon band structure), and runs it as a standalone `AnaddbTask`
+-- no `Flow`, no `Work`, same idea as the Task examples in
+`1-Task_to_flow.ipynb`. Results are written to `task_mgo_anaddb/` --
+`plot_mgo_phonons.py` reads them from there.
 
 Usage
 -----
     python run_mgo_anaddb.py
 """,
+        chunks=["get_anaddb_input", "setup_task_manager"],
+        needs_mgo_cif=True,
         kind="script",
         body='''\
 def main():
+    workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
     ddb_path = SCRIPT_DIR / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
-    workdir = SCRIPT_DIR / 'task_mgo_anaddb'
 
-    with abilab.abiopen(str(ddb_path)) as ddb:
-        phbst_file, phdos_file = ddb.anaget_phbst_and_phdos_files(
-            workdir=str(workdir),
-            nqsmall=10,
-            ndivsm=40,
-            asr=2,
-            chneut=1,
-            dipdip=1,
-            dos_method='tetra',
-            lo_to_splitting='automatic',
-            mpi_procs=1,
-            verbose=True)
+    # Make Anaddb task
+    inp = get_anaddb_input()
+    task = flowtk.AnaddbTask(inp, workdir=workdir, ddb_node=str(ddb_path))
+    task = setup_task_manager(task, mpi_procs=1)
+
+    # Remove a previous run, if it exists.
+    if Path(workdir).exists():
+        print(f'Removing existing directory: {workdir}/')
+        task.rmtree()
+
+    # Write files and run the task
+    task.build()
+    task.make_links()
+    task.start_and_wait()
+    print(task.check_status())
 
 if __name__ == "__main__":
     main()''',

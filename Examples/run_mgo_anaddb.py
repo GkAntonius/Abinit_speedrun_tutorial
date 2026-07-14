@@ -3,12 +3,14 @@
 Companion to `2-Existing_flows.ipynb`, section 2.4 (phonons) -- the anaddb
 post-processing step.
 
-Opens `flow_mgo_phonons/w1/outdata/out_DDB`, the output of
-`make_mgo_phonons.py`, and calls `anaget_phbst_and_phdos_files` to
-Fourier-interpolate the dynamical matrix onto a dense q-mesh (for the
-phonon DOS) and along a high-symmetry q-path (for the phonon band
-structure). Results are written to `task_mgo_anaddb/` -- `plot_mgo_phonons.py`
-reads them from there.
+Builds an `AnaddbInput` (`workshop_lib.get_anaddb_input()`) that
+Fourier-interpolates the dynamical matrix from
+`flow_mgo_phonons/w1/outdata/out_DDB` (the output of `make_mgo_phonons.py`)
+onto a dense q-mesh (for the phonon DOS) and along a high-symmetry q-path
+(for the phonon band structure), and runs it as a standalone `AnaddbTask`
+-- no `Flow`, no `Work`, same idea as the Task examples in
+`1-Task_to_flow.ipynb`. Results are written to `task_mgo_anaddb/` --
+`plot_mgo_phonons.py` reads them from there.
 
 Usage
 -----
@@ -29,12 +31,14 @@ PSEUDO_DIR = DATA_DIR / "Pseudos"
 STRUCTURE_DIR = DATA_DIR / "Structures"
 MGO_CIF = STRUCTURE_DIR / 'mp-1265_MgO.cif'
 
-def get_anaddb_input(structure, ngqpt=(2,2,2), ndivsm=40):
 
+def get_anaddb_input():
+
+    structure = Structure.from_file(str(MGO_CIF))
     inp = abilab.AnaddbInput.phbands_and_dos(
         structure,
-        ngqpt=ngqpt,
-        ndivsm=ndivsm,
+        ngqpt=[2,2,2],
+        ndivsm=40,
         line_density=None,
         nqsmall=10,
         qppa=None,
@@ -65,13 +69,10 @@ def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 
 def main():
     workdir = Path(__file__).name.replace(".py", "").replace("run_", "task_")
-    ddb_path = Path(__file__).parent / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
-
-    # Open structure file
-    structure = Structure.from_file(str(MGO_CIF))
+    ddb_path = SCRIPT_DIR / 'flow_mgo_phonons' / 'w1' / 'outdata' / 'out_DDB'
 
     # Make Anaddb task
-    inp = get_anaddb_input(structure)
+    inp = get_anaddb_input()
     task = flowtk.AnaddbTask(inp, workdir=workdir, ddb_node=str(ddb_path))
     task = setup_task_manager(task, mpi_procs=1)
 
@@ -85,7 +86,6 @@ def main():
     task.make_links()
     task.start_and_wait()
     print(task.check_status())
-
 
 if __name__ == "__main__":
     main()
