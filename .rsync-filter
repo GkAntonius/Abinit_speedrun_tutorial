@@ -1,0 +1,7 @@
+- .git
+- __pycache__
+- .ipynb_checkpoints
+- flow_*
+- task_*
+- Plots*
+- Examples/Data*
