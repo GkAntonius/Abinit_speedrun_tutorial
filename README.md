@@ -5,13 +5,11 @@
 Let us speedrun through Density Functional Theory (DFT) calculations by making workflows and inspecting the tasks along the way.
 This tutorial is intended for new Abinit users AND experienced users wanting to master automation with Abipy.
 
-[**Wiew it on github**](https://github.com/GkAntonius/Abinit_speedrun_tutorial)
-
 **Other tutorials and documentation:**
 
-* The official Abinit tutorials.
-* The Abipy API documentation.he 
-* The abipy_notebook tutorial.
+* The Abinit [website](https://www.abinit.org) and [tutorials](https://docs.abinit.org/tutorial/).
+* The Abipy [website](https://abinit.github.io/abipy/)
+* The [abipy_book](https://abinit.github.io/abipy_book/intro.html).
 
 ## Overview
 
@@ -24,3 +22,6 @@ This tutorial comes both in the form of notebooks
 * **3-Relaxation** -- Relaxating atomic positions and cell volume (AlN)
 * **4-Phonons** -- Use existing workflows to compute phonon band structure (MgO)
 * **5-Challenge** -- Put it all together.
+
+
+[**Wiew on github**](https://github.com/GkAntonius/Abinit_speedrun_tutorial)
