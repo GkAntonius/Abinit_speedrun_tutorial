@@ -5,6 +5,10 @@
 Let us speedrun through Density Functional Theory (DFT) calculations by making workflows and inspecting the tasks along the way.
 This tutorial is intended for new Abinit users AND experienced users wanting to master automation with Abipy.
 
+You can read through the tutorial in less than 30 minutes,
+    do the exercices along the way in about 1.5h,
+    and complete one of the challenges within a 3h session.
+
 ## Overview
 
 This tutorial can be followed through notebooks (`Notebooks/*.ipynb`)
