@@ -8,8 +8,9 @@ This tutorial is intended for new Abinit users AND experienced users wanting to 
 **Official Abinit & Abipy docs:**
 
 * The [Abinit website](https://www.abinit.org)
-  ** Index of [input variables](https://docs.abinit.org/variables/).
-  ** Several [tutorials](https://docs.abinit.org/tutorial/).
+  * Index of [input variables](https://docs.abinit.org/variables/).
+  * Several [tutorials](https://docs.abinit.org/tutorial/).
+
 * The [Abipy website](https://abinit.github.io/abipy/).
 * The [abipy_book](https://abinit.github.io/abipy_book/intro.html).
 
