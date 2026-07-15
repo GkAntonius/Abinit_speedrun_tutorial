@@ -7,7 +7,7 @@ This tutorial is intended for new Abinit users AND experienced users wanting to 
 
 ## Overview
 
-This tutorial can be followed through notebooks (`Notebooks/*.ipynb')
+This tutorial can be followed through notebooks (`Notebooks/*.ipynb`)
     and example scripts (`Examples/*.py`) that let you run tasks and plot results in the terminal shell.
 
 0. **Setup** -- Check your environment.
@@ -18,11 +18,9 @@ This tutorial can be followed through notebooks (`Notebooks/*.ipynb')
 5. **Challenges** -- Explore new materials.
 
 
-### Get started
+## Get started
 
-Set up your environment [**Setup/setup_environment.sh**](Setup/0-Setup.ipynb)
-
-Start the [**notebooks**](Notebooks/0-Setup.ipynb)
+View the [**notebooks**](Notebooks/0-Setup.ipynb)
 
 View it on [**GitHub**](https://github.com/GkAntonius/Abinit_speedrun_tutorial)
 
