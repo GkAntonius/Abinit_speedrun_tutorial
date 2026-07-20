@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SOURCE_SCRIPT="$SCRIPT_DIR/source-scripts/cemdi.sh"
 SOURCE_TARGET="$HOME/.cemdi.sh"
-SOURCE_BASHRC_LINE="source $SOURCE_TARGET"
+SOURCE_BASHRC_LINE="source $SOURCE_TARGET >& /dev/null"
 
 MANAGER_SOURCE="$SCRIPT_DIR/abipy-config/cemdi/manager.yml"
 SCHEDULER_SOURCE="$SCRIPT_DIR/abipy-config/cemdi/scheduler.yml"
@@ -101,7 +101,7 @@ done
 
 # --- 5. Source the installed script ----------------------------------------------
 step "source $SOURCE_TARGET"
-source $SOURCE_TARGET
+source $SOURCE_TARGET >& /dev/null
 
 echo ""
 echo "=============================================="
