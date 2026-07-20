@@ -1,0 +1,75 @@
+
+hardware: &hardware
+   num_nodes: 670
+   sockets_per_node: 1
+   cores_per_socket: 96
+   mem_per_node: 750 Gb
+
+# Make sure you keep this list up to date
+job: &job
+   mpi_runner: mpirun
+   shell_runner: None
+   modules:
+       - CCconfig
+       - gentoo/2023
+       - gcccore/.12.3
+       - hwloc/2.9.1
+       - ucx/1.14.1
+       - libfabric/1.18.0
+       - pmix/4.2.4
+       - ucc/1.2.0
+       - openmpi/4.1.5
+       - flexiblas/3.3.1
+       - imkl/2023.2.0
+       - StdEnv/2023
+       - mii/1.1.2
+       - code-server/4.101.2
+       - calibre/8.6.0
+       - libreqda/1.1.0
+       - flexiblascore/.3.3.1
+       - java/17.0.6
+       - java/17
+       - r/4.4.0
+       - rstudio-server/4.4
+       - ipykernel/2026a
+       - ipython-kernel/3.11
+       - openrefine/3.9.3
+       - mlflow/3.8.1
+       - tensorboard/2.20.0
+       - jupyterlab-apps/1.0
+       - gcc/12.3
+       - fftw/3.3.10
+       - fftw-mpi/3.3.10
+       - scalapack/2.2.0
+       - netcdf-fortran-mpi/4.6.1
+       - elpa/2023.05.001
+       - libxc/6.2.2
+       - xmlf90/1.6.2
+       - libpsml/1.1.12
+       - wannier90/3.1.0
+       - atompaw/4.2.0.3
+       - abinit/10.8.2
+       - python/3.12.4
+       - mpi4py/4.1.0
+       - libaec/1.0.6
+       - hdf5/1.14.6
+       - netcdf/4.9.3
+       - scipy-stack/2026a
+
+   shell_env:
+        #ABI_PSPDIR: "/home/YOUR-ACCOUNT-NAME/Data/Pseudos/pseudodojo-nc-sr-pbe-psp8/"
+
+   pre_run: []
+
+qadapters:
+    # List of qadapters objects 
+    - priority: 1
+      queue:
+        qtype: shell
+        qname: localhost
+      limits:
+        timelimit: 1:00:00
+        max_cores: 32
+      hardware: *hardware
+      job: *job
+
