@@ -5,3 +5,7 @@ flow*
 task*
 Plots*
 Examples/Data*
+
+# Exclude everything except Work/README.md. (Line order matters)
+Work/*
+!Work/README.md
