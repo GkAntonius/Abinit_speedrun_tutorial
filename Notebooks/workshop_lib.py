@@ -1,5 +1,5 @@
 """
-Helper functions for the CEMDI 2026 Abinit/AbiPy workshop notebook.
+Helper functions for the CEMDI 2026 Abinit/abipy workshop notebook.
 
 Everything here revolves around a single test system, gallium arsenide (GaAs),
 so that the whole 3h session reuses the same structure and pseudopotentials.
@@ -92,6 +92,7 @@ STRUCTURE_DIR = DATA_DIR / "Structures"
 
 GAAS_CIF = STRUCTURE_DIR / "mp-2534_GaAs.cif"
 SI_CIF = STRUCTURE_DIR / "mp-149_Si.cif"
+AL_CIF = STRUCTURE_DIR / "mp-134_Al.cif"
 ALN_CIF = STRUCTURE_DIR / "mp-661_AlN.cif"
 MGO_CIF = STRUCTURE_DIR / "mp-1265_MgO.cif"
 
@@ -104,22 +105,27 @@ FCC_KPATH = [
 
 
 def gaas_structure():
-    """Return the AbiPy Structure for GaAs (Materials Project mp-2534)."""
+    """Return the abipy Structure for GaAs (Materials Project mp-2534)."""
     return Structure.from_file(str(GAAS_CIF))
 
 
 def si_structure():
-    """Return the AbiPy Structure for Si (Materials Project mp-149)."""
+    """Return the abipy Structure for Si (Materials Project mp-149)."""
     return Structure.from_file(str(SI_CIF))
 
 
 def aln_structure():
-    """Return the AbiPy Structure for AlN (Materials Project mp-661)."""
+    """Return the abipy Structure for AlN (Materials Project mp-661)."""
     return Structure.from_file(str(ALN_CIF))
 
 
+def al_structure():
+    """Return the abipy Structure for Al (Materials Project mp-134)."""
+    return Structure.from_file(str(AL_CIF))
+
+
 def mgo_structure():
-    """Return the AbiPy Structure for MgO (Materials Project mp-1265)."""
+    """Return the abipy Structure for MgO (Materials Project mp-1265)."""
     return Structure.from_file(str(MGO_CIF))
 
 
@@ -352,7 +358,7 @@ def build_si_ebands_flow(workdir="flow_si_ebands"):
 # 5) Equation of state / lattice parameter.
 #    Several GS runs at scaled volumes around the experimental/relaxed
 #    volume, then a Birch-Murnaghan fit with abilab.EOS -- the same idea
-#    as the "Determination of the lattice parameters" section of the AbiPy
+#    as the "Determination of the lattice parameters" section of the abipy
 #    base3 (silicon) lesson, applied here to GaAs.
 # ---------------------------------------------------------------------------
 def build_eos_flow(workdir="flow_gaas_eos", scale_volumes=tuple(np.arange(0.94, 1.07, 0.02))):
