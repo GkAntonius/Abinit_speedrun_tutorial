@@ -374,7 +374,7 @@ Usage
 """,
         chunks=["gs_input", "build_kpt_conv_flow", "setup_manager"],
         entry_fn="build_kpt_conv_flow",
-        entry_kwargs=", nk_list=(2, 4, 6, 8, 10), ecut=40",
+        entry_kwargs=", nk_list=(2, 4, 6, 8, 10), ecut=12",
         mpi_procs=10,
         needs_gaas_cif=True,
     ),

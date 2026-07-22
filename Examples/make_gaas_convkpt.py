@@ -71,7 +71,7 @@ def build_flow(workdir=None):
                 break
         workdir = f"flow_{name}"
 
-    flow = build_kpt_conv_flow(workdir=workdir, nk_list=(2, 4, 6, 8, 10), ecut=40)
+    flow = build_kpt_conv_flow(workdir=workdir, nk_list=(2, 4, 6, 8, 10), ecut=12)
     flow = setup_manager(flow, mpi_procs=10, omp_threads=1)
     return flow
 
