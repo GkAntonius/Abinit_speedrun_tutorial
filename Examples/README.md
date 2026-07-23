@@ -13,14 +13,14 @@ Here is the list of shell commands that you should run in each section of the no
 ## 1.2 Band structure calculation in a second, dependent Task
 
     python run_si_nscf.py
-    python plot_ebands_1.py
+    python plot_si_nscf.py
 
 ## 1.3 Wrapping both Tasks in a Flow
 
 ### Build it, write it, run it
 
     python run_si_ebands.py
-    python plot_ebands_2.py
+    python plot_si_ebands.py
 
 ### Build it now, Run it later
 
@@ -29,7 +29,7 @@ Here is the list of shell commands that you should run in each section of the no
 
     abirun.py flow_si_ebands/ scheduler
 
-    python plot_ebands_2.py
+    python plot_si_ebands.py
 
 
 # 2. Building your flows: GaAs convergence study

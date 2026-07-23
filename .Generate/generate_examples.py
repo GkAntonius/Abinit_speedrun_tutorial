@@ -79,7 +79,7 @@ class Recipe:
     * "script" -- doesn't build anything; `body` is the literal `main()` (+
       `if __name__ == "__main__":` guard) of a script that just opens the
       output of an existing Task/Flow/anaddb run and post-processes or
-      plots it. Used by `save_aln_structure.py`, `plot_si_bands_*.py`,
+      plots it. Used by `save_aln_structure.py`, `plot_si_*.py`,
       `plot_gaas_convecut.py`, `run_mgo_anaddb.py` and `plot_mgo_phonons.py`.
 
     `build_expr` is the expression (given `workdir`) that builds the
@@ -160,18 +160,18 @@ Usage
         timelimit_hour=0.5,
     ),
     Recipe(
-        fname="plot_si_bands_1.py",
+        fname="plot_si_nscf.py",
         docstring="""\
 Companion to `1-Task_to_flow.ipynb`, step 2 (plotting).
 
 Plots the band structure from `task_si_nscf/`, the output of the two
 manually-chained tasks in `run_si_gstate.py` + `run_si_nscf.py`. Compare
-with `plot_si_bands_2.py`, which plots the same physics from the `Flow`
+with `plot_si_ebands.py`, which plots the same physics from the `Flow`
 version (`run_si_ebands.py`) instead.
 
 Usage
 -----
-    python plot_si_bands_1.py
+    python plot_si_nscf.py
 """,
         extra_imports="import numpy as np\n\nimport matplotlib.pyplot as plt",
         kind="script",
@@ -230,18 +230,18 @@ Usage
         timelimit_hour=0.5,
     ),
     Recipe(
-        fname="plot_si_bands_2.py",
+        fname="plot_si_ebands.py",
         docstring="""\
 Companion to `1-Task_to_flow.ipynb`, step 3 (plotting).
 
 Plots the band structure from `flow_si_ebands/`, the output of the `Flow`
 version of the same calculation (`run_si_ebands.py`). Compare with
-`plot_si_bands_1.py`, which plots the same physics from the two
+`plot_si_nscf.py`, which plots the same physics from the two
 manually-chained tasks instead.
 
 Usage
 -----
-    python plot_si_bands_2.py
+    python plot_si_ebands.py
 """,
         extra_imports="import numpy as np\n\nimport matplotlib.pyplot as plt",
         kind="script",
