@@ -102,16 +102,9 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     return flow
 
 
-def build_flow(workdir=None):
-    # Set working directory (default is constructed from the script name,
-    # stripping a leading "run_" or "make_" and prepending "flow_").
-    if not workdir:
-        name = Path(__file__).name.replace(".py", "")
-        for prefix in ("run_", "make_"):
-            if name.startswith(prefix):
-                name = name[len(prefix):]
-                break
-        workdir = f"flow_{name}"
+def build_flow():
+    # Construct workdir from the file name
+    workdir = Path(__file__).name.replace(".py", "").replace("make_", "flow_")
 
     flow = build_si_ebands_task_flow(workdir=workdir)
     flow = setup_manager(flow, mpi_procs=4, omp_threads=1)
