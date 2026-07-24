@@ -178,7 +178,7 @@ def build_si_nscf_task(workdir, density):
 def build_si_ebands_task_flow(workdir):
     """Same two Tasks as above, registered in a Work/Flow instead of run by hand."""
     flow = flowtk.Flow(workdir=workdir)
-    work = flowtk.Work(workdir=None)
+    work = flowtk.Work()
 
     gs_task = build_si_gs_task(workdir=None)
     nscf_task = build_si_nscf_task(workdir=None, density=gs_task)
@@ -499,5 +499,6 @@ def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
     manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
     manager.qadapter.set_timelimit(3600*timelimit_hour)
     for work in flow:
-        work.set_manager(manager)
+        for task in work:
+            task.set_manager(manager)
     return flow
