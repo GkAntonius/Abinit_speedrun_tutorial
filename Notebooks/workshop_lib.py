@@ -46,26 +46,18 @@ from abipy.abilab import Structure
 from abipy.tools.plotting import ConvergenceAnalyzer
 from IPython.display import Code, display
 
-# ---------------------------------------------------------------------------
-# Notebook helper: syntax-highlighted source, without depending on
-# abipy.abilab.print_source (which is really just this, hardcoded to
-# pygments+HTML instead of IPython's own Code display class).
-# ---------------------------------------------------------------------------
+
 #def print_source(obj):
-#    """Display the source of a function/class as syntax-highlighted code."""
+#    """Display the source code of a function in a notebook."""
 #    display(Code(inspect.getsource(obj), language="python"))
 
 def print_source(obj):
-    """Let us make use of abilab wrapper (looks much better than IPython)."""
+    """Display the source code of a function in a notebook."""
     display(abilab.print_source(obj))
 
 
 def shell_command(command, silent=False):
-    """Run a shell command in the background, without waiting for it.
-
-    If `silent` is True, also discard its stdout instead of letting it
-    inherit the notebook kernel's own (where it would otherwise show up).
-    """
+    """Run a shell command in the background, without waiting for it."""
     kwargs = {
         # stderr is always discarded: programs that probe the terminal
         # (e.g. `stty`, called internally by abirun.py) print a harmless
@@ -78,6 +70,7 @@ def shell_command(command, silent=False):
     }
     if silent:
         kwargs["stdout"] = subprocess.DEVNULL
+
     subprocess.Popen(command.split(), **kwargs)
 
 
@@ -135,8 +128,8 @@ def mgo_structure():
 #    / run_si_ebands.py to show the Task -> Flow progression before the rest
 #    of this module moves on to GaAs Flows.
 # ---------------------------------------------------------------------------
-def si_gs_input(ecut=6, ngkpt=(8, 8, 8)):
-    """Return a GS input for Si on a homogeneous k-mesh."""
+def si_gs_input(ecut=6, ngkpt=(4, 4, 4)):
+    """Create input for ground state calculation in Si."""
     structure = si_structure()
     pseudos = ["Si.psp8"]
 
@@ -148,7 +141,7 @@ def si_gs_input(ecut=6, ngkpt=(8, 8, 8)):
 
 
 def build_si_gs_task(workdir):
-    """A single AbinitTask (no Flow, no Work) for the Si ground state."""
+    """Create task for ground state calculation in Si."""
     inp = si_gs_input()
     return flowtk.AbinitTask(inp, workdir=workdir)
 
@@ -198,10 +191,12 @@ def build_si_ebands_task_flow(workdir):
 
 
 def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
-    """Same as setup_manager(), for a standalone Task instead of a Flow."""
-    manager = abilab.TaskManager.from_user_config()
+    """
+    Set the number of processors for MPI and OMP parallelization of a task, and set a time limit.
+    """
+    manager = abilab.TaskManager.from_user_config()  # Read file ~/.abinit/abipy/manager.yml
     manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
-    manager.qadapter.set_timelimit(3600 * timelimit_hour)
+    manager.qadapter.set_timelimit(3600*timelimit_hour)
     task.set_manager(manager)
     return task
 
@@ -209,7 +204,7 @@ def setup_task_manager(task, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
 # ---------------------------------------------------------------------------
 # 1) Ground-state total energy.
 # ---------------------------------------------------------------------------
-def gs_input(ecut=6, ngkpt=(8, 8, 8)):
+def gs_input(ecut=6, ngkpt=(4, 4, 4)):
     """Return a GS input for GaAs on a homogeneous k-mesh."""
     structure = gaas_structure()
     pseudos = ["Ga.psp8", "As.psp8"]
@@ -494,12 +489,15 @@ def plot_relax(workdir, figname, show=True):
 
     return fig
 
-# ---------------------------------------------------------------------------
-# Generic scheduler/manager helper reused by every flow builder above.
-# ---------------------------------------------------------------------------
+
 def setup_manager(flow, mpi_procs=4, omp_threads=1, timelimit_hour=2.0):
-    manager = flow.manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
-    manager.qadapter.set_timelimit(3600 * timelimit_hour)
+    """
+    Set the number of processors for MPI and OMP parallelization,
+    and set a time limit for the individual tasks.
+    """
+    manager = abilab.TaskManager.from_user_config()  # Read file ~/.abinit/abipy/manager.yml
+    manager = manager.new_with_fixed_mpi_omp(mpi_procs=mpi_procs, omp_threads=omp_threads)
+    manager.qadapter.set_timelimit(3600*timelimit_hour)
     for work in flow:
         work.set_manager(manager)
     return flow
